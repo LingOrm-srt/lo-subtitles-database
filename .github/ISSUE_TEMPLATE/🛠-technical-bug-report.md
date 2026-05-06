@@ -1,6 +1,6 @@
 ---
-name: Bug report
-about: Create a report to help us improve
+name: "\U0001F6E0 Technical Bug Report"
+about: Report a glitch or technical error in the extension
 title: ''
 labels: bug
 assignees: ''
