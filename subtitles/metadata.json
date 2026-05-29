@@ -1,0 +1,63 @@
+{
+  "PROJECT_INFO": {
+    "extension_version": "1.0.0",
+    "last_updated": "2026-05-28",
+    "description": "Master routing database for LingOrm Verified Subtitles"
+  },
+
+  "MAPPING": {
+    
+    "=== THE SECRET OF US (SERIES) ===": "Comment Line for Organization",
+
+    "ch3_stream_77810": {
+      "series": "the-secret-of-us",
+      "episode": "ep-01",
+      "offset": 0
+    },
+    "yt_watch_dQw4w9W": {
+      "series": "the-secret-of-us",
+      "episode": "ep-01",
+      "offset": -11.5
+    },
+
+    "ch3_stream_77812": {
+      "series": "the-secret-of-us",
+      "episode": "ep-02",
+      "offset": 0
+    },
+    "yt_watch_kXyZ882": {
+      "series": "the-secret-of-us",
+      "episode": "ep-02",
+      "offset": -11.5
+    },
+
+
+    "=== ONLY YOU (SERIES) ===": "Comment Line for Organization",
+
+    "ch3_stream_99102": {
+      "series": "only-you",
+      "episode": "ep-01",
+      "offset": 0
+    },
+    "yt_watch_p7376_x": {
+      "series": "only-you",
+      "episode": "ep-01",
+      "offset": -12.2
+    },
+
+
+    "=== INTERVIEWS & BEHIND THE SCENES ===": "Comment Line for Organization",
+
+    "yt_interview_abc123": {
+      "series": "bonus-content",
+      "episode": "interview-lingling-polyplus",
+      "offset": 0
+    },
+    "yt_bts_xyz789": {
+      "series": "bonus-content",
+      "episode": "bts-ep01-special",
+      "offset": 0
+    }
+
+  }
+}
