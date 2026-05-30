@@ -414,11 +414,11 @@ Mírala. Está a punto de desmayarse.
 Déjala entrar si es lo que quiere.
 
 103
-00:12:33,280 --> 00:13:34,160
+00:12:33,280 --> 00:12:34,160
 Es verdad.
 
 104
-00:13:35,040 --> 00:12:36,840
+00:12:35,040 --> 00:12:36,840
 ¿Y quién la va a entrenar?
 
 105
