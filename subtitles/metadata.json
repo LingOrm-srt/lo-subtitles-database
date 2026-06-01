@@ -32,19 +32,47 @@
     },
 
 
-    "=== ONLY YOU (SERIES) ===": "Comment Line for Organization",
+    "=== ONLY YOU (SERIES) ===": "FULL EPISODES SECTION (PAID)",
+
+    "ch3-video-id": {
+      "series": "only-you",
+      "episode": "ep-01/full-episode",
+      "offset": 0
+    },
+    "ch3-video-id": {
+      "series": "only-you",
+      "episode": "ep-02/full-episode",
+      "offset": 0
+    },
+    
+
+    "=== ONLY YOU (SERIES) ===": "EPISODES IN PARTS SECTION (FREE). VIDEO ID'S FOR FOR CH3PLUS AND YOUTUBE",
 
     "251450": {
       "series": "only-you",
-      "episode": "ep-01",
+      "episode": "ep-01/part-1",
       "offset": 0
     },
     "eOvOOJYLTYM": {
       "series": "only-you",
-      "episode": "ep-01",
+      "episode": "ep-01/part-1",
       "offset": -5.5
     },
 
+
+    "=== ONLY YOU (SERIES) ===": "EPISODES BEHIND THE SCENES SECTION (PAID)",
+
+    "ch3-video-id": {
+      "series": "only-you",
+      "episode": "oy-behind-the-scenes/ep-01",
+      "offset": 0
+    },
+    "ch3-video-id": {
+      "series": "only-you",
+      "episode": "oy-behind-the-scenes/ep-02",
+      "offset": 0
+    },
+    
 
     "=== INTERVIEWS & BEHIND THE SCENES ===": "Comment Line for Organization",
 
