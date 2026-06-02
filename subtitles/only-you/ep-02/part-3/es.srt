@@ -36,7 +36,8 @@ Subamos a preparar algo sencillo para cenar.
 
 10
 00:01:21,360 --> 00:01:26,400
-Según la información que tenemos, no sabes cocinar.
+Según la información que tenemos,
+no sabes cocinar.
 
 11
 00:01:28,400 --> 00:01:29,680
@@ -84,7 +85,8 @@ Gracias.
 
 22
 00:03:39,800 --> 00:03:44,160
-No sabía que el arroz frito con huevo con salsa picante sería tan delicioso.
+No sabía que el arroz frito con huevo 
+con salsa picante sería tan delicioso.
 
 23
 00:03:44,240 --> 00:03:45,840
@@ -152,7 +154,8 @@ Gracias.
 
 39
 00:05:11,600 --> 00:05:15,240
-Si algo sale mal, puedes llamarme a la hora que sea.
+Si algo sale mal, 
+puedes llamarme a la hora que sea.
 
 40
 00:05:19,040 --> 00:05:20,040
