@@ -196,15 +196,18 @@ Ayla.
 
 50
 00:03:50,000 --> 00:03:51,520
--Hola. -Hola.
+-Hola.
+-Hola.
 
 51
 00:03:52,720 --> 00:03:54,800
--¿Estás bien? -Sí.
+-¿Estás bien?
+-Sí.
 
 52
 00:03:54,800 --> 00:03:57,000
--Te extrañé. -Te pusiste más bonita.
+-Te extrañé.
+-Te pusiste más bonita.
 
 53
 00:04:00,280 --> 00:04:03,080
@@ -408,7 +411,8 @@ Acabo de terminar de grabar la parte de rap. ¿Quieres escuchar?
 
 103
 00:07:12,440 --> 00:07:15,320
--Escuchémosla. Di lo mejor de mí. -Está bien, está bien.
+-Escuchémosla. Di lo mejor de mí. 
+-Está bien, está bien.
 
 104
 00:07:15,320 --> 00:07:18,440
@@ -500,7 +504,8 @@ Nana y Typhoon me estaban fastidiando para que le preguntara.
 
 126
 00:08:25,160 --> 00:08:26,600
--Yo no tengo nada que ver. -Yo nunca...
+-Yo no tengo nada que ver. 
+-Yo nunca...
 
 127
 00:08:26,680 --> 00:08:28,840
@@ -512,7 +517,8 @@ Ya basta, basta, basta.
 
 129
 00:08:32,440 --> 00:08:35,240
--Yo no dije nada, jefe. -No hablen. Silencio.
+-Yo no dije nada, jefe. 
+-No hablen. Silencio.
 
 130
 00:08:35,799 --> 00:08:37,000
@@ -524,7 +530,8 @@ Hola. Buenas noches, chicos.
 
 132
 00:08:45,360 --> 00:08:46,840
--Buenas noches. -Eres tan bonita. ¿Estás cansada?
+-Buenas noches. 
+-Eres tan bonita. ¿Estás cansada?
 
 133
 00:08:46,920 --> 00:08:48,840
@@ -532,15 +539,18 @@ No. ¿Ustedes están cansados?
 
 134
 00:08:48,920 --> 00:08:51,760
--Para nada. -Muchas gracias por venir hoy.
+-Para nada. 
+-Muchas gracias por venir hoy.
 
 135
 00:08:52,160 --> 00:08:54,480
--Por favor, descansen mucho. -Lo haré. Ustedes también.
+-Por favor, descansen mucho. 
+-Lo haré. Ustedes también.
 
 136
 00:08:54,480 --> 00:08:56,840
--Nos vemos. -Lo haré. Adiós.
+-Nos vemos. 
+-Lo haré. Adiós.
 
 137
 00:09:23,760 --> 00:09:26,600
