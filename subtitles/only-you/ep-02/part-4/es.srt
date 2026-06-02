@@ -264,7 +264,8 @@ tonterías.
 
 66
 00:04:45,000 --> 00:04:48,080
-Cierta chica no paraba de hablar de sus comidas favoritas.
+Cierta chica no paraba de hablar 
+de sus comidas favoritas.
 
 67
 00:04:50,640 --> 00:04:53,120
