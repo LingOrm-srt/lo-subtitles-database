@@ -27,11 +27,11 @@ Firma aquí, por favor.
 ♪ Más sentido cada día ♪
 
 8
-00:04:54,440 --> 00:00:58,240
+00:00:54,440 --> 00:00:58,240
 ♪ Quiero ser tu sol ♪
 
 9
-00:04:58,240 --> 00:00:59,400
+00:00:58,240 --> 00:00:59,400
 (Club de Danza y Teatro)
 
 10
@@ -196,18 +196,15 @@ Ayla.
 
 50
 00:03:50,000 --> 00:03:51,520
--Hola.
--Hola.
+-Hola. -Hola.
 
 51
 00:03:52,720 --> 00:03:54,800
--¿Cómo has estado?
--Muy bien.
+-¿Cómo has estado? -Muy bien.
 
 52
 00:03:54,800 --> 00:03:57,000
--Te extrañé.
--Estás más linda.
+-Te extrañé. -Estás más linda.
 
 53
 00:04:00,280 --> 00:04:03,080
@@ -410,9 +407,8 @@ Realmente es hermosa.
 Acabo de terminar de grabar la parte del rap. ¿Quieres escucharla?
 
 103
-00:12:44,440 --> 00:07:15,320
--Vamos a escucharla. Di lo mejor de mí.
--Está bien, está bien.
+00:07:12,440 --> 00:07:15,320
+-Vamos a escucharla. Di lo mejor de mí. -Está bien, está bien.
 
 104
 00:07:15,320 --> 00:07:18,440
@@ -504,8 +500,7 @@ Nana y Typhoon me estuvieron molestando para que le preguntara.
 
 126
 00:08:25,160 --> 00:08:26,600
--Yo no tengo nada que ver.
--Yo nunca...
+-Yo no tengo nada que ver. -Yo nunca...
 
 127
 00:08:26,680 --> 00:08:28,840
@@ -517,8 +512,7 @@ Ya, ya, ya basta.
 
 129
 00:08:32,440 --> 00:08:35,240
--Yo no dije nada, jefa.
--No hables. Cállate.
+-Yo no dije nada, jefa. -No hables. Cállate.
 
 130
 00:08:35,799 --> 00:08:37,000
@@ -530,8 +524,7 @@ Hola. Buenas noches, chicos.
 
 132
 00:08:45,360 --> 00:08:46,840
--Buenas noches.
--Estás hermosa. ¿Estás cansada?
+-Buenas noches. -Estás hermosa. ¿Estás cansada?
 
 133
 00:08:46,920 --> 00:08:48,840
@@ -539,18 +532,15 @@ Para nada. ¿Ustedes están cansados?
 
 134
 00:08:48,920 --> 00:08:51,760
--En absoluto.
--Muchas gracias por venir hoy.
+-En absoluto. -Muchas gracias por venir hoy.
 
 135
 00:08:52,160 --> 00:08:54,480
--Por favor, descansen mucho.
--Lo haré. Ustedes también.
+-Por favor, descansen mucho. -Lo haré. Ustedes también.
 
 136
 00:08:54,480 --> 00:08:56,840
--Nos vemos.
--Nos vemos. Adiós.
+-Nos vemos. -Nos vemos. Adiós.
 
 137
 00:09:23,760 --> 00:09:26,600
@@ -577,7 +567,7 @@ Este es para cuando salgo tarde del trabajo. Me queda más cerca.
 ¿Tú sola?
 
 143
-00:09:28,880 --> 00:09:44,200
+00:09:42,880 --> 00:09:44,200
 Completamente sola.
 
 144
