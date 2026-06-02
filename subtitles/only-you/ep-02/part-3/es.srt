@@ -1,0 +1,159 @@
+1
+00:00:21,840 --> 00:00:23,280
+¿Puedo salir ya?
+
+2
+00:00:26,880 --> 00:00:27,880
+Por favor.
+
+3
+00:00:48,360 --> 00:00:49,400
+Adelante.
+
+4
+00:01:04,599 --> 00:01:05,200
+¡Ah!
+
+5
+00:01:06,600 --> 00:01:07,600
+Ups.
+
+6
+00:01:09,120 --> 00:01:10,440
+Me muero de hambre.
+
+7
+00:01:10,760 --> 00:01:14,080
+Subamos a preparar algo sencillo para cenar.
+
+8
+00:01:15,240 --> 00:01:16,880
+¿Sabes cocinar?
+
+9
+00:01:18,520 --> 00:01:20,680
+¿Me creerías si te digo que sí?
+
+10
+00:01:21,360 --> 00:01:26,400
+Según la información que tenemos, no sabes cocinar.
+
+11
+00:01:28,400 --> 00:01:29,680
+Tu información es correcta.
+
+12
+00:02:01,560 --> 00:02:03,240
+No hay nada de comer.
+
+13
+00:02:04,560 --> 00:02:08,479
+Normalmente pido comida a domicilio aquí.
+
+14
+00:02:08,800 --> 00:02:10,199
+Es más fácil.
+
+15
+00:02:29,880 --> 00:02:31,840
+Te haré arroz frito con huevo.
+
+16
+00:02:33,560 --> 00:02:34,920
+¿Comerás eso?
+
+17
+00:03:11,720 --> 00:03:12,720
+Listo.
+
+18
+00:03:14,440 --> 00:03:15,600
+Se ve delicioso.
+
+19
+00:03:18,080 --> 00:03:19,160
+¿Comenzamos?
+
+20
+00:03:20,240 --> 00:03:21,360
+Cuidado. Está caliente.
+
+21
+00:03:23,560 --> 00:03:24,560
+Gracias.
+
+22
+00:03:39,800 --> 00:03:44,160
+No sabía que el arroz frito con huevo con salsa picante sería tan delicioso.
+
+23
+00:03:44,240 --> 00:03:45,840
+¿De dónde sacaste la receta?
+
+24
+00:03:45,840 --> 00:03:47,520
+Vi que solo agregaste unos pocos ingredientes.
+
+25
+00:03:47,600 --> 00:03:51,040
+Este es mi platillo de último recurso.
+
+26
+00:03:51,120 --> 00:03:54,440
+Pero no creo que sea tan delicioso.
+
+27
+00:03:54,520 --> 00:03:56,480
+Es así de delicioso.
+
+28
+00:03:56,760 --> 00:03:59,240
+Oye, me puedo terminar la sartén completa.
+
+29
+00:04:00,000 --> 00:04:01,280
+Así que come.
+
+30
+00:04:30,520 --> 00:04:31,520
+Gracias.
+
+31
+00:04:33,400 --> 00:04:35,240
+Por preparar esta comida.
+
+32
+00:04:37,560 --> 00:04:39,600
+Por favor, cocíname más seguido.
+
+33
+00:04:45,560 --> 00:04:46,680
+Creo que...
+
+34
+00:04:47,720 --> 00:04:48,800
+debería irme.
+
+35
+00:04:50,840 --> 00:04:52,960
+Te pasaré a buscar a las ocho mañana.
+
+36
+00:04:53,880 --> 00:04:54,880
+Sí.
+
+37
+00:04:58,320 --> 00:04:59,400
+Nos vemos entonces.
+
+38
+00:05:08,760 --> 00:05:09,800
+Gracias.
+
+39
+00:05:11,600 --> 00:05:15,240
+Si algo sale mal, puedes llamarme a la hora que sea.
+
+40
+00:05:19,040 --> 00:05:20,040
+Claro que sí.
