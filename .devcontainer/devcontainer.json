@@ -1,0 +1,10 @@
+{
+  "name": "LingOrm Subtitle Verification Studio",
+  "settings": {
+    "workbench.colorTheme": "Default Dark Modern",
+    "editor.lineNumbers": "on"
+  },
+  "extensions": [
+    "byby.subtitle-lite" 
+  ]
+}
