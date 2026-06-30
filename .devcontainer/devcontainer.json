@@ -5,6 +5,6 @@
     "editor.lineNumbers": "on"
   },
   "extensions": [
-    "byby.subtitle-lite" 
+    "ginfuru.vscode-subtitle-navigator" 
   ]
 }
