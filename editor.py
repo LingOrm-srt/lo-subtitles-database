@@ -48,7 +48,6 @@ HTML_TEMPLATE = r"""
 <head>
     <title>LingOrm Fan Subtitles - Studio Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@1.4.12/dist/hls.min.js"></script>
     <style>
         body {
             margin: 0; padding: 0;
@@ -104,7 +103,7 @@ HTML_TEMPLATE = r"""
         .btn-success { background: #71EDFF; color: #0b0914; box-shadow: 0 0 15px rgba(113,237,255,0.2); }
         .btn-success:hover { background: #96f2ff; box-shadow: 0 0 25px rgba(113,237,255,0.4); }
         
-        /* Subtitle Spreadsheet Grid Grid */
+        /* Subtitle Spreadsheet Grid */
         .subtitle-pane { width: 55%; display: flex; flex-direction: column; padding: 24px; box-sizing: border-box; }
         .file-selector {
             margin-bottom: 20px; width: 100%; padding: 14px;
@@ -155,9 +154,9 @@ HTML_TEMPLATE = r"""
                 <div style="color: #615c7a; text-align: center; font-size: 14px;">No Media Target Pipeline Active</div>
             </div>
             <div class="url-input-container">
-                <div style="font-size: 11px; font-weight:700; color:#615c7a; text-transform:uppercase; margin-bottom:2px;">Media Multiplexer Route</div>
+                <div style="font-size: 11px; font-weight:700; color:#ff77ed; text-transform:uppercase; margin-bottom:2px;">🔗 Media Multiplexer Route (Direct Link: YouTube Only)</div>
                 <div class="url-input-row">
-                    <input type="text" id="videoUrl" placeholder="Paste YouTube link or CH3Plus Video ID/URL (e.g., https://ch3plus.com/v/251217)...">
+                    <input type="text" id="videoUrl" placeholder="Paste YouTube link or type a local mp4 file name (e.g. video.mp4)...">
                     <button class="btn btn-primary" onclick="loadMediaStream()">Link Stream</button>
                 </div>
             </div>
@@ -196,59 +195,45 @@ HTML_TEMPLATE = r"""
             
             if (!rawUrl) return;
 
-            // Clear previous video structures safely
             container.innerHTML = "";
             nativePlayerElement = null;
 
-            // Route 1: Ch3Plus Identification Parser Engine
-            if (rawUrl.includes('ch3plus.com') || /^\d+$/.test(rawUrl)) {
-                let videoId = rawUrl;
-                if (rawUrl.includes('/v/')) {
-                    videoId = rawUrl.split('/v/')[1].split('?')[0];
-                }
-                
-                // Native Cloud Infrastructure streaming asset proxy payload endpoint logic
-                const hlsStreamUrl = `https://cdn.ch3plus.com/v/${videoId}/playlist.m3u8`;
-                
-                const videoHtml = `<video id="ch3NativePlayer" controls crossorigin="anonymous"></video>`;
-                container.innerHTML = videoHtml;
-                
-                const videoElement = document.getElementById('ch3NativePlayer');
-                nativePlayerElement = videoElement;
-
-                if (Hls.isSupported()) {
-                    const hls = new Hls();
-                    hls.loadSource(hlsStreamUrl);
-                    hls.attachMedia(videoElement);
-                } else if (videoElement.canPlayType('application/vnd.apple.mpegurl')) {
-                    videoElement.src = hlsStreamUrl;
-                }
-            } 
-            // Route 2: Standard YouTube Integration Loop
-            else if (rawUrl.includes('youtube.com') || rawUrl.includes('youtu.be')) {
+            // Route 1: Standard YouTube Stream
+            if (rawUrl.includes('youtube.com') || rawUrl.includes('youtu.be')) {
                 let videoId = "";
                 if (rawUrl.includes('v=')) {
                     videoId = rawUrl.split('v=')[1].split('&')[0];
                 } else {
                     videoId = rawUrl.split('/').pop().split('?')[0];
                 }
-                
-                // Embedded with strict referrerpolicy parameters to bypass Error 153 structural lockouts
                 container.innerHTML = `<iframe id="ytEmbeddedPlayer" src="https://www.youtube-nocookie.com/embed/${videoId}?enablejsapi=1&rel=0" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>`;
-            } else {
-                alert("Unrecognized streaming framework payload target. Provide a valid YouTube or CH3Plus endpoint layout.");
+            } 
+            // Route 2: Ch3Plus Security Warning + Fallback Instruction
+            else if (rawUrl.includes('ch3plus.com')) {
+                container.innerHTML = `
+                    <div style="padding: 20px; text-align: center; color: #ff7777; font-size: 13px; line-height: 1.6;">
+                        ⚠️ <strong>Ch3Plus Link Blocked:</strong> Channel 3 enforces session security signatures on their external streams. <br><br>
+                        <span style="color:#aaa;">To review this episode: Drop the downloaded source video file directly into your Codespace repository sidebar folder, and type its file name (e.g., <code>episode1.mp4</code>) into the field to play it locally!</span>
+                    </div>`;
+            }
+            // Route 3: Local Repository Video Files or Direct MP4 Links (Fallback Option)
+            else {
+                container.innerHTML = `<video id="localNativePlayer" controls><source src="${rawUrl}" type="video/mp4"></video>`;
+                nativePlayerElement = document.getElementById('localNativePlayer');
+                
+                nativePlayerElement.onerror = function() {
+                    container.innerHTML = `<div style="color: #ff7777; font-size: 13px; text-align: center; padding: 20px;">❌ Unable to resolve media track stream location. Ensure the local video filename matches your repository file exactly.</div>`;
+                };
             }
         }
 
         function seekToTimestamp(timecodeStr) {
             const targetSeconds = convertTimestampToSeconds(timecodeStr);
             
-            // Handle native HLS scrubbing execution
             if (nativePlayerElement) {
                 nativePlayerElement.currentTime = targetSeconds;
                 nativePlayerElement.play();
             } 
-            // Handle Embedded YouTube postMessage frame pipeline execution API controls
             else {
                 const ytFrame = document.getElementById('ytEmbeddedPlayer');
                 if (ytFrame && ytFrame.contentWindow) {
@@ -335,7 +320,6 @@ HTML_TEMPLATE = r"""
             }
         }
 
-        // Professional keyboard shortcut macros: Ctrl + Enter to quickly save progress
         window.addEventListener('keydown', (e) => {
             if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
                 e.preventDefault();
@@ -366,7 +350,6 @@ def save_srt_api():
     save_srt(file_path, subtitles)
     return jsonify({"status": "success"})
 
-# Inject response headers to force cross-origin validation to allow YouTube embeds 
 @app.after_request
 def add_security_headers(response):
     response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
