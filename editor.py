@@ -1,6 +1,6 @@
 import os
 import re
-from flask import Flask, render_code, render_template_string, request, jsonify
+from flask import Flask, render_template_string, request, jsonify
 
 app = Flask(__name__)
 
@@ -45,8 +45,8 @@ def save_srt(file_path, subtitles_list):
         for sub in subtitles_list:
             f.write(f"{sub['index']}\n{sub['timecode']}\n{sub['text']}\n\n")
 
-# Premium Cyberpunk Dashboard Template Layer
-HTML_TEMPLATE = """
+# Added an 'r' before the triple quotes to make it a Raw String and prevent escape warnings
+HTML_TEMPLATE = r"""
 <!DOCTYPE html>
 <html>
 <head>
@@ -164,16 +164,16 @@ HTML_TEMPLATE = """
                 } else {
                     videoId = urlInput.split('/').pop();
                 }
-                container.innerHTML = `<iframe width="100%" height="100%" src="https://www.youtube.com/embed/\${videoId}" frameborder="0" allowfullscreen style="border-radius:6px;"></iframe>`;
+                container.innerHTML = `<iframe width="100%" height="100%" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen style="border-radius:6px;"></iframe>`;
             } else {
                 alert("Please enter a valid YouTube video track link.");
             }
         }
 
-        async d_loadSrtFile(filePath) {
+        async function loadSrtFile(filePath) {
             if (!filePath) return;
             activeFilePath = filePath;
-            const response = await fetch(`/load?file=\${encodeURIComponent(filePath)}`);
+            const response = await fetch(`/load?file=${encodeURIComponent(filePath)}`);
             const subs = await response.json();
             
             const listContainer = document.getElementById('subtitleList');
@@ -184,24 +184,22 @@ HTML_TEMPLATE = """
                 card.className = "subtitle-card";
                 card.innerHTML = `
                     <div class="card-meta">
-                        <span>SEQUENCE NO. \${sub.index}</span>
-                        <span style="color: #71EDFF;">\${sub.timecode}</span>
+                        <span>SEQUENCE NO. ${sub.index}</span>
+                        <span style="color: #71EDFF;">${sub.timecode}</span>
                     </div>
-                    <textarea class="card-textarea" data-index="\${sub.index}" data-timecode="\${sub.timecode}">\${sub.text}</textarea>
+                    <textarea class="card-textarea" data-index="${sub.index}" data-timecode="${sub.timecode}">${sub.text}</textarea>
                 `;
                 listContainer.appendChild(card);
             });
         }
-        // Match standard naming compatibility
-        window.loadSrtFile = d_loadSrtFile;
 
-        async d_saveActiveFile() {
+        async function saveActiveFile() {
             if (!activeFilePath) { alert("No track target is selected."); return; }
             const textareas = document.querySelectorAll('.card-textarea');
             const subtitles = [];
             
             textareas.forEach(tx => {
-                subtitles.append({
+                subtitles.push({
                     index: tx.getAttribute('data-index'),
                     timecode: tx.getAttribute('data-timecode'),
                     text: tx.value
@@ -221,8 +219,6 @@ HTML_TEMPLATE = """
                 alert("❌ Error compiling file changes onto disk.");
             }
         }
-        // Match standard naming compatibility
-        window.saveActiveFile = d_saveActiveFile;
     </script>
 </body>
 </html>
@@ -248,5 +244,4 @@ def save_srt_api():
     return jsonify({"status": "success"})
 
 if __name__ == '__main__':
-    # Running on local port 8080 inside Codespace wrapper network environment
     app.run(host='0.0.0.0', port=8080)
