@@ -1,14 +1,12 @@
 import os
 import re
-from flask import Flask, render_template_string, request, jsonify
+from flask import Flask, render_template_string, request, jsonify, make_response
 
 app = Flask(__name__)
 
-# Locate all subtitle tracks inside the repository structure dynamically
 def get_all_srt_files():
     srt_files = []
     for root, dirs, files in os.walk("."):
-        # Ignore hidden folders like .git or .devcontainer
         if any(h in root for h in [".git", ".devcontainer", "__pycache__"]):
             continue
         for file in files:
@@ -23,7 +21,6 @@ def parse_srt(file_path):
     with open(file_path, "r", encoding="utf-8") as f:
         content = f.read()
     
-    # Split blocks by double newlines
     blocks = re.split(r'\n\s*\n', content.strip())
     subtitles = []
     
@@ -45,128 +42,235 @@ def save_srt(file_path, subtitles_list):
         for sub in subtitles_list:
             f.write(f"{sub['index']}\n{sub['timecode']}\n{sub['text']}\n\n")
 
-# Added an 'r' before the triple quotes to make it a Raw String and prevent escape warnings
 HTML_TEMPLATE = r"""
 <!DOCTYPE html>
 <html>
 <head>
-    <title>LO Arena - Verification Studio</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <title>LingOrm Fan Subtitles - Studio Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@1.4.12/dist/hls.min.js"></script>
     <style>
         body {
             margin: 0; padding: 0;
-            font-family: 'Poppins', sans-serif;
-            background: #090710; color: #ffffff;
+            font-family: 'Inter', sans-serif;
+            background: #0b0914; color: #f3f4f6;
             display: flex; flex-direction: column; height: 100vh;
             overflow: hidden;
         }
         header {
-            background: #120f1d; padding: 14px 24px;
+            background: #110e21; padding: 16px 28px;
             display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 1px solid rgba(113, 237, 255, 0.1);
+            border-bottom: 1px solid rgba(113, 237, 255, 0.15);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
         }
-        h1 { margin: 0; font-size: 18px; color: #71EDFF; letter-spacing: 0.5px; }
+        h1 { margin: 0; font-size: 20px; color: #71EDFF; font-weight: 700; letter-spacing: -0.5px; }
+        .brand-badge { background: linear-gradient(135deg, #FF77ED, #71EDFF); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .workspace { display: flex; flex: 1; overflow: hidden; }
         
-        /* Video Viewport Pane */
+        /* Studio Playback Module */
         .video-pane {
-            width: 45%; background: #000000;
-            display: flex; flex-direction: column; padding: 20px;
-            border-right: 1px solid rgba(255, 255, 255, 0.05);
-            box-sizing: border-box;
+            width: 45%; background: #07050d;
+            display: flex; flex-direction: column; padding: 24px;
+            border-right: 1px solid rgba(255, 255, 255, 0.06);
+            box-sizing: border-box; gap: 16px;
         }
-        .video-box {
-            width: 100%; aspect-ratio: 16/9; background: #120f1d;
-            border-radius: 8px; border: 1px solid #2e264f;
-            display: flex; justify-content: center; align-items: center;
-            color: #666; font-size: 14px; margin-bottom: 15px;
+        .media-container {
+            width: 100%; aspect-ratio: 16/9; background: #000000;
+            border-radius: 12px; border: 1px solid #221c38;
+            overflow: hidden; display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); position: relative;
+        }
+        video { width: 100%; height: 100%; object-fit: contain; }
+        iframe { width: 100%; height: 100%; border: none; }
+        
+        .url-input-container {
+            background: #110e21; border: 1px solid #221c38; padding: 12px; border-radius: 8px;
+            display: flex; flex-direction: column; gap: 8px;
         }
         .url-input-row { display: flex; gap: 10px; }
         input[type="text"] {
-            flex: 1; padding: 10px; background: #120f1d;
-            border: 1px solid #2e264f; border-radius: 6px;
-            color: #ffffff; font-family: inherit; font-size: 12px;
+            flex: 1; padding: 12px 16px; background: #07050d;
+            border: 1px solid #2d254b; border-radius: 6px;
+            color: #ffffff; font-family: inherit; font-size: 13px;
         }
+        input[type="text"]:focus { outline: none; border-color: #71EDFF; }
+        
         .btn {
-            padding: 10px 16px; border: none; border-radius: 6px;
-            font-weight: 600; font-size: 12px; cursor: pointer; transition: all 0.2s;
+            padding: 12px 20px; border: none; border-radius: 6px;
+            font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s ease;
         }
-        .btn-primary { background: #FF77ED; color: #000; }
-        .btn-primary:hover { background: #ff9eff; }
-        .btn-success { background: #71EDFF; color: #000; }
-        .btn-success:hover { background: #a2f5ff; }
+        .btn-primary { background: #FF77ED; color: #0b0914; }
+        .btn-primary:hover { background: #ff99f0; transform: translateY(-1px); }
+        .btn-success { background: #71EDFF; color: #0b0914; box-shadow: 0 0 15px rgba(113,237,255,0.2); }
+        .btn-success:hover { background: #96f2ff; box-shadow: 0 0 25px rgba(113,237,255,0.4); }
         
-        /* Subtitle Editing Pane */
-        .subtitle-pane { width: 55%; display: flex; flex-direction: column; padding: 20px; box-sizing: border-box; }
-        .file-selector { margin-bottom: 20px; width: 100%; padding: 10px; background: #120f1d; border: 1px solid #2e264f; color: #71EDFF; font-weight: 600; border-radius: 6px; }
-        .subtitle-list { flex: 1; overflow-y: auto; padding-right: 10px; }
+        /* Subtitle Spreadsheet Grid Grid */
+        .subtitle-pane { width: 55%; display: flex; flex-direction: column; padding: 24px; box-sizing: border-box; }
+        .file-selector {
+            margin-bottom: 20px; width: 100%; padding: 14px;
+            background: #110e21; border: 1px solid #221c38;
+            color: #71EDFF; font-weight: 600; font-size: 14px; border-radius: 8px; cursor: pointer;
+        }
+        .subtitle-list { flex: 1; overflow-y: auto; padding-right: 8px; }
         
-        /* Subtitle Line Rows */
+        /* Timed Text Row Cards */
         .subtitle-card {
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-left: 3px solid #FF77ED;
-            padding: 12px; margin-bottom: 10px; border-radius: 6px;
-            display: flex; flex-direction: column; gap: 8px;
+            background: #110e21; border: 1px solid #1d1833;
+            border-left: 4px solid #2d254b; padding: 16px; margin-bottom: 12px;
+            border-radius: 8px; display: flex; flex-direction: column; gap: 10px;
+            transition: all 0.2s ease; cursor: pointer;
         }
-        .card-meta { display: flex; justify-content: space-between; font-size: 11px; color: #6a677a; font-weight: 600; }
-        .card-textarea {
-            width: 100%; background: #0d0b16; border: 1px solid #2e264f;
-            border-radius: 4px; padding: 8px; color: #ffffff;
-            font-family: inherit; font-size: 13px; resize: vertical; box-sizing: border-box;
-        }
-        .card-textarea:focus { outline: none; border-color: #71EDFF; }
+        .subtitle-card:hover { border-color: #2d254b; background: #151129; }
+        .subtitle-card.active-track { border-left-color: #FF77ED; background: #181430; box-shadow: inset 0 0 10px rgba(255,119,237,0.05); }
         
-        /* Save Footer Bar */
-        .action-bar { display: flex; justify-content: flex-end; padding-top: 15px; border-top: 1px solid rgba(255, 255, 255, 0.05); }
+        .card-meta { display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; color: #615c7a; }
+        .timestamp-badge { color: #71EDFF; background: rgba(113,237,255,0.07); padding: 2px 8px; border-radius: 4px; font-family: monospace; }
+        
+        .card-textarea {
+            width: 100%; background: #07050d; border: 1px solid #221c38;
+            border-radius: 6px; padding: 12px; color: #ffffff;
+            font-family: inherit; font-size: 14px; line-height: 1.5; resize: none; box-sizing: border-box;
+        }
+        .card-textarea:focus { outline: none; border-color: #FF77ED; }
+        
+        .metrics-row { display: flex; justify-content: flex-end; font-size: 11px; color: #615c7a; font-weight: 500; }
+        .warning-limit { color: #ff7777; font-weight: 700; }
+        
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0b0914; }
+        ::-webkit-scrollbar-thumb { background: #1d1833; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #2d254b; }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>🎬 LINGORM STUDIO // Verification Workspace</h1>
-        <button class="btn btn-success" onclick="saveActiveFile()">💾 Save Changes to Repository</button>
+        <h1>🎬 <span class="brand-badge">LingOrm Fan Subtitles</span> // QC Verification Center</h1>
+        <button class="btn btn-success" onclick="saveActiveFile()">💾 Save Changes to Repo</button>
     </header>
 
     <div class="workspace">
         <div class="video-pane">
-            <div class="video-box" id="videoContainer">No Active Video Preview Loaded</div>
-            <div class="url-input-row">
-                <input type="text" id="videoUrl" placeholder="Paste YouTube Video URL here...">
-                <button class="btn btn-primary" onclick="loadVideo()">Load Video</button>
+            <div class="media-container" id="mediaContainer">
+                <div style="color: #615c7a; text-align: center; font-size: 14px;">No Media Target Pipeline Active</div>
+            </div>
+            <div class="url-input-container">
+                <div style="font-size: 11px; font-weight:700; color:#615c7a; text-transform:uppercase; margin-bottom:2px;">Media Multiplexer Route</div>
+                <div class="url-input-row">
+                    <input type="text" id="videoUrl" placeholder="Paste YouTube link or CH3Plus Video ID/URL (e.g., https://ch3plus.com/v/251217)...">
+                    <button class="btn btn-primary" onclick="loadMediaStream()">Link Stream</button>
+                </div>
             </div>
         </div>
         
         <div class="subtitle-pane">
             <select class="file-selector" id="fileSelector" onchange="loadSrtFile(this.value)">
-                <option value="">-- Choose a Subtitle File to Review --</option>
+                <option value="">-- Select Active Script Target Folder --</option>
                 {% for file in srt_files %}
                 <option value="{{ file }}">{{ file }}</option>
                 {% endfor %}
             </select>
             
             <div class="subtitle-list" id="subtitleList">
-                <div style="color: #6a677a; text-align: center; margin-top: 100px;">Select a track script to populate the sequence timelines.</div>
+                <div style="color: #615c7a; text-align: center; margin-top: 120px; font-size: 14px;">Select an SRT track script asset from the drop-down menu layer to sync configuration lines.</div>
             </div>
         </div>
     </div>
 
     <script>
         let activeFilePath = "";
+        let nativePlayerElement = null;
 
-        function loadVideo() {
-            const urlInput = document.getElementById('videoUrl').value;
-            const container = document.getElementById('videoContainer');
-            if (urlInput.includes('youtube.com') || urlInput.includes('youtu.be')) {
-                let videoId = "";
-                if (urlInput.includes('v=')) {
-                    videoId = urlInput.split('v=')[1].split('&')[0];
-                } else {
-                    videoId = urlInput.split('/').pop();
+        function convertTimestampToSeconds(ts) {
+            const parts = ts.split('-->')[0].trim().split(':');
+            if (parts.length < 3) return 0;
+            const hrs = parseFloat(parts[0]);
+            const mins = parseFloat(parts[1]);
+            const secs = parseFloat(parts[2].replace(',', '.'));
+            return (hrs * 3600) + (mins * 60) + secs;
+        }
+
+        function loadMediaStream() {
+            const rawUrl = document.getElementById('videoUrl').value.trim();
+            const container = document.getElementById('mediaContainer');
+            
+            if (!rawUrl) return;
+
+            // Clear previous video structures safely
+            container.innerHTML = "";
+            nativePlayerElement = null;
+
+            // Route 1: Ch3Plus Identification Parser Engine
+            if (rawUrl.includes('ch3plus.com') || /^\d+$/.test(rawUrl)) {
+                let videoId = rawUrl;
+                if (rawUrl.includes('/v/')) {
+                    videoId = rawUrl.split('/v/')[1].split('?')[0];
                 }
-                container.innerHTML = `<iframe width="100%" height="100%" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen style="border-radius:6px;"></iframe>`;
+                
+                // Native Cloud Infrastructure streaming asset proxy payload endpoint logic
+                const hlsStreamUrl = `https://cdn.ch3plus.com/v/${videoId}/playlist.m3u8`;
+                
+                const videoHtml = `<video id="ch3NativePlayer" controls crossorigin="anonymous"></video>`;
+                container.innerHTML = videoHtml;
+                
+                const videoElement = document.getElementById('ch3NativePlayer');
+                nativePlayerElement = videoElement;
+
+                if (Hls.isSupported()) {
+                    const hls = new Hls();
+                    hls.loadSource(hlsStreamUrl);
+                    hls.attachMedia(videoElement);
+                } else if (videoElement.canPlayType('application/vnd.apple.mpegurl')) {
+                    videoElement.src = hlsStreamUrl;
+                }
+            } 
+            // Route 2: Standard YouTube Integration Loop
+            else if (rawUrl.includes('youtube.com') || rawUrl.includes('youtu.be')) {
+                let videoId = "";
+                if (rawUrl.includes('v=')) {
+                    videoId = rawUrl.split('v=')[1].split('&')[0];
+                } else {
+                    videoId = rawUrl.split('/').pop().split('?')[0];
+                }
+                
+                // Embedded with strict referrerpolicy parameters to bypass Error 153 structural lockouts
+                container.innerHTML = `<iframe id="ytEmbeddedPlayer" src="https://www.youtube-nocookie.com/embed/${videoId}?enablejsapi=1&rel=0" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>`;
             } else {
-                alert("Please enter a valid YouTube video track link.");
+                alert("Unrecognized streaming framework payload target. Provide a valid YouTube or CH3Plus endpoint layout.");
+            }
+        }
+
+        function seekToTimestamp(timecodeStr) {
+            const targetSeconds = convertTimestampToSeconds(timecodeStr);
+            
+            // Handle native HLS scrubbing execution
+            if (nativePlayerElement) {
+                nativePlayerElement.currentTime = targetSeconds;
+                nativePlayerElement.play();
+            } 
+            // Handle Embedded YouTube postMessage frame pipeline execution API controls
+            else {
+                const ytFrame = document.getElementById('ytEmbeddedPlayer');
+                if (ytFrame && ytFrame.contentWindow) {
+                    const payload = JSON.stringify({
+                        event: 'command',
+                        func: 'seekTo',
+                        args: [targetSeconds, true]
+                    });
+                    ytFrame.contentWindow.postMessage(payload, '*');
+                    ytFrame.contentWindow.postMessage(JSON.stringify({event: 'command', func: 'playVideo'}), '*');
+                }
+            }
+        }
+
+        function updateMetrics(textareaElement) {
+            const currentLen = textareaElement.value.length;
+            const meter = textareaElement.nextElementSibling.querySelector('.char-count');
+            meter.innerText = currentLen;
+            if (currentLen > 40) {
+                meter.className = "char-count warning-limit";
+            } else {
+                meter.className = "char-count";
             }
         }
 
@@ -182,19 +286,30 @@ HTML_TEMPLATE = r"""
             subs.forEach(sub => {
                 const card = document.createElement('div');
                 card.className = "subtitle-card";
+                card.onclick = (e) => {
+                    if(e.target.tagName !== 'TEXTAREA') {
+                        seekToTimestamp(sub.timecode);
+                        document.querySelectorAll('.subtitle-card').forEach(c => c.classList.remove('active-track'));
+                        card.classList.add('active-track');
+                    }
+                };
+                
                 card.innerHTML = `
                     <div class="card-meta">
-                        <span>SEQUENCE NO. ${sub.index}</span>
-                        <span style="color: #71EDFF;">${sub.timecode}</span>
+                        <span>BLOCK ID // ${sub.index}</span>
+                        <span class="timestamp-badge">${sub.timecode}</span>
                     </div>
-                    <textarea class="card-textarea" data-index="${sub.index}" data-timecode="${sub.timecode}">${sub.text}</textarea>
+                    <textarea class="card-textarea" rows="2" data-index="${sub.index}" data-timecode="${sub.timecode}" oninput="updateMetrics(this)">${sub.text}</textarea>
+                    <div class="metrics-row">
+                        <span>Characters: <span class="char-count">${sub.text.length}</span> / 40 line limit</span>
+                    </div>
                 `;
                 listContainer.appendChild(card);
             });
         }
 
         async function saveActiveFile() {
-            if (!activeFilePath) { alert("No track target is selected."); return; }
+            if (!activeFilePath) { alert("No active script serialization layout target selected."); return; }
             const textareas = document.querySelectorAll('.card-textarea');
             const subtitles = [];
             
@@ -202,7 +317,7 @@ HTML_TEMPLATE = r"""
                 subtitles.push({
                     index: tx.getAttribute('data-index'),
                     timecode: tx.getAttribute('data-timecode'),
-                    text: tx.value
+                    text: tx.value.trim()
                 });
             });
             
@@ -214,11 +329,19 @@ HTML_TEMPLATE = r"""
             
             const resData = await response.json();
             if (resData.status === "success") {
-                alert("🎉 File written directly to disk repository! Sync via your Git tab to update Cloudflare.");
+                alert("🎉 Local database tracking synced successfully onto disk infrastructure!");
             } else {
-                alert("❌ Error compiling file changes onto disk.");
+                alert("❌ Critical write synchronization failure.");
             }
         }
+
+        // Professional keyboard shortcut macros: Ctrl + Enter to quickly save progress
+        window.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault();
+                saveActiveFile();
+            }
+        });
     </script>
 </body>
 </html>
@@ -242,6 +365,12 @@ def save_srt_api():
     subtitles = data.get('subtitles')
     save_srt(file_path, subtitles)
     return jsonify({"status": "success"})
+
+# Inject response headers to force cross-origin validation to allow YouTube embeds 
+@app.after_request
+def add_security_headers(response):
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    return response
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080)
