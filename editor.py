@@ -154,9 +154,9 @@ HTML_TEMPLATE = r"""
                 <div style="color: #615c7a; text-align: center; font-size: 14px;">No Media Target Pipeline Active</div>
             </div>
             <div class="url-input-container">
-                <div style="font-size: 11px; font-weight:700; color:#ff77ed; text-transform:uppercase; margin-bottom:2px;">🔗 Media Multiplexer Route (Direct Link: YouTube Only)</div>
+                <div style="font-size: 11px; font-weight:700; color:#615c7a; text-transform:uppercase; margin-bottom:2px;">Media Multiplexer Route (Only YouTube Supported Online)</div>
                 <div class="url-input-row">
-                    <input type="text" id="videoUrl" placeholder="Paste YouTube link or type a local mp4 file name (e.g. video.mp4)...">
+                    <input type="text" id="videoUrl" placeholder="Paste YouTube Link OR Type Local Video Filename (e.g. video.mp4)...">
                     <button class="btn btn-primary" onclick="loadMediaStream()">Link Stream</button>
                 </div>
             </div>
@@ -208,21 +208,21 @@ HTML_TEMPLATE = r"""
                 }
                 container.innerHTML = `<iframe id="ytEmbeddedPlayer" src="https://www.youtube-nocookie.com/embed/${videoId}?enablejsapi=1&rel=0" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>`;
             } 
-            // Route 2: Ch3Plus Security Warning + Fallback Instruction
+            // Route 2: Ch3Plus Security Warning Alert Block
             else if (rawUrl.includes('ch3plus.com')) {
                 container.innerHTML = `
                     <div style="padding: 20px; text-align: center; color: #ff7777; font-size: 13px; line-height: 1.6;">
-                        ⚠️ <strong>Ch3Plus Link Blocked:</strong> Channel 3 enforces session security signatures on their external streams. <br><br>
-                        <span style="color:#aaa;">To review this episode: Drop the downloaded source video file directly into your Codespace repository sidebar folder, and type its file name (e.g., <code>episode1.mp4</code>) into the field to play it locally!</span>
+                        ⚠️ <strong>Ch3Plus Link Blocked:</strong> Channel 3 enforces secure session tokens on their site links.<br><br>
+                        <span style="color:#aaa;">To review this track: Download the video file, drag it into your Codespace sidebar directory, and type its exact filename (e.g., <code>episode1.mp4</code>) into the input box below!</span>
                     </div>`;
             }
-            // Route 3: Local Repository Video Files or Direct MP4 Links (Fallback Option)
+            // Route 3: Fallback Player for Local MP4 Video Workspace Files
             else {
                 container.innerHTML = `<video id="localNativePlayer" controls><source src="${rawUrl}" type="video/mp4"></video>`;
                 nativePlayerElement = document.getElementById('localNativePlayer');
                 
                 nativePlayerElement.onerror = function() {
-                    container.innerHTML = `<div style="color: #ff7777; font-size: 13px; text-align: center; padding: 20px;">❌ Unable to resolve media track stream location. Ensure the local video filename matches your repository file exactly.</div>`;
+                    container.innerHTML = `<div style="color: #ff7777; font-size: 13px; text-align: center; padding: 20px;">❌ Unable to load media stream. Ensure the local filename is spelled exactly right, or paste a valid YouTube link.</div>`;
                 };
             }
         }
