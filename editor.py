@@ -73,21 +73,40 @@ HTML_TEMPLATE = r"""
             border-right: 1px solid rgba(255, 255, 255, 0.06);
             box-sizing: border-box; gap: 16px;
         }
+        
+        /* Visual Docking Container Layout */
         .media-container {
             width: 100%; aspect-ratio: 16/9; background: #000000;
-            border-radius: 12px; border: 1px solid #221c38;
-            overflow: hidden; display: flex; justify-content: center; align-items: center;
+            border-radius: 12px; border: 2px dashed rgba(113, 237, 255, 0.3);
+            overflow: hidden; display: flex; flex-direction: column; justify-content: center; align-items: center;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5); position: relative;
+            transition: all 0.3s ease;
         }
-        video { width: 100%; height: 100%; object-fit: contain; }
-        iframe { width: 100%; height: 100%; border: none; }
+        
+        /* Interactive Subtitle Overlay Screen */
+        .subtitle-overlay-layer {
+            position: absolute; bottom: 0; left: 0; right: 0; top: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
+            padding: 24px; pointer-events: none; opacity: 0; transition: opacity 0.2s ease;
+            text-align: center; z-index: 10;
+        }
+        .subtitle-overlay-layer.active-view { opacity: 1; }
+        .overlay-text-render {
+            color: #ffffff; background: rgba(0, 0, 0, 0.85);
+            padding: 8px 16px; border-radius: 6px; font-size: 18px;
+            font-weight: 500; border: 1px solid rgba(255, 255, 255, 0.1);
+            max-width: 85%; line-height: 1.4; box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            text-shadow: 0 2px 4px rgba(0,0,0,1); font-family: sans-serif;
+        }
         
         .instruction-box {
             background: #110e21; border: 1px solid #2d254b; padding: 20px; border-radius: 8px;
             display: flex; flex-direction: column; gap: 12px; height: 100%; justify-content: center;
+            box-sizing: border-box; width: 100%; text-align: center;
         }
         .instruction-title { color: #FF77ED; font-weight: 700; font-size: 15px; margin-bottom: 4px; }
-        .step-list { margin: 0; padding-left: 20px; font-size: 13px; color: #b4b0cb; line-height: 1.8; }
+        .step-list { margin: 0; padding-left: 20px; font-size: 13px; color: #b4b0cb; line-height: 1.8; text-align: left; }
         .step-list strong { color: #71EDFF; }
 
         .url-input-container {
@@ -160,18 +179,26 @@ HTML_TEMPLATE = r"""
     <div class="workspace">
         <div class="video-pane">
             <div class="media-container" id="mediaContainer">
+                
+                <!-- Live Preview Text Layer Display System -->
+                <div class="subtitle-overlay-layer" id="subtitleOverlay">
+                    <div class="overlay-text-render" id="overlayText">Subtitle Preview Container</div>
+                </div>
+
+                <!-- Guidance Board -->
                 <div class="instruction-box" id="instructionBox">
-                    <div class="instruction-title">CH3Plus Secure Playback Mode</div>
+                    <div class="instruction-title">CH3Plus Workspace Setup Guide</div>
                     <ol class="step-list">
-                        <li>Click the <strong>Open CH3Plus Website</strong> button below.</li>
-                        <li>Log into your personal CH3Plus account in that tab and navigate to your episode.</li>
-                        <li>Right-click the video player and choose <strong>Picture-in-Picture</strong>.</li>
-                        <li>Return to this dashboard. Drag the floating video window directly over this black square!</li>
-                        <li><em>Tip: Click any cyan timestamp badge on the right to copy its layout position time code automatically.</em></li>
+                        <li>Click the button below to open <strong>CH3Plus</strong> in a new window.</li>
+                        <li>Log into your account, launch the episode, and right-click to activate <strong>Picture-in-Picture</strong>.</li>
+                        <li>Return here and move the floating video panel over this dashed docking square.</li>
+                        <li><strong>Subtitle Verification Layer:</strong> Clicking any subtitle block on the right instantly reflects the text layer onto this screen area.</li>
+                        <li><strong>Timestamp Copying:</strong> Clicking the cyan badge copies the timecode so you can match it on your floating video player manually.</li>
                     </ol>
                     <a href="https://ch3plus.com" target="_blank" class="btn btn-primary" style="margin-top: 8px;">🌐 Open CH3Plus Website</a>
                 </div>
             </div>
+            
             <div class="url-input-container">
                 <div style="font-size: 11px; font-weight:700; color:#615c7a; text-transform:uppercase; margin-bottom:2px;">YouTube Link Overrides</div>
                 <div class="url-input-row">
@@ -208,8 +235,6 @@ HTML_TEMPLATE = r"""
                 return;
             }
 
-            container.innerHTML = "";
-
             if (rawUrl.includes('youtube.com') || rawUrl.includes('youtu.be')) {
                 let videoId = "";
                 if (rawUrl.includes('v=')) {
@@ -234,10 +259,31 @@ HTML_TEMPLATE = r"""
             });
         }
 
+        // Display current card text directly over the alignment grid frame layer
+        function displayActiveSubtitle(text) {
+            const overlay = document.getElementById('subtitleOverlay');
+            const overlayText = document.getElementById('overlayText');
+            
+            if (!overlay || !overlayText) return;
+            
+            if (!text.trim()) {
+                overlay.classList.remove('active-view');
+            } else {
+                overlayText.innerText = text;
+                overlay.classList.add('active-view');
+            }
+        }
+
         function updateMetrics(textareaElement) {
             const currentLen = textareaElement.value.length;
             const meter = textareaElement.nextElementSibling.querySelector('.char-count');
             meter.innerText = currentLen;
+            
+            // Sync text live to overlay if the card is currently highlighted
+            if (textareaElement.closest('.subtitle-card').classList.contains('active-track')) {
+                displayActiveSubtitle(textareaElement.value);
+            }
+            
             if (currentLen > 40) {
                 meter.className = "char-count warning-limit";
             } else {
@@ -257,17 +303,20 @@ HTML_TEMPLATE = r"""
             subs.forEach(sub => {
                 const card = document.createElement('div');
                 card.className = "subtitle-card";
+                
+                // Clicking anywhere triggers activation layout highlights and overlays text
                 card.onclick = (e) => {
-                    if(e.target.tagName !== 'TEXTAREA' && !e.target.classList.contains('timestamp-badge')) {
-                        document.querySelectorAll('.subtitle-card').forEach(c => c.classList.remove('active-track'));
-                        card.classList.add('active-track');
-                    }
+                    document.querySelectorAll('.subtitle-card').forEach(c => c.classList.remove('active-track'));
+                    card.classList.add('active-track');
+                    
+                    const currentTextValue = card.querySelector('.card-textarea').value;
+                    displayActiveSubtitle(currentTextValue);
                 };
                 
                 card.innerHTML = `
                     <div class="card-meta">
                         <span>BLOCK ID // ${sub.index}</span>
-                        <span class="timestamp-badge" onclick="copyTimestampToClipboard('${sub.timecode.split('-->')[0].trim()}', this)">${sub.timecode}</span>
+                        <span class="timestamp-badge" title="Click to copy start time" onclick="copyTimestampToClipboard('${sub.timecode.split('-->')[0].trim()}', this); e.stopPropagation();">${sub.timecode}</span>
                     </div>
                     <textarea class="card-textarea" rows="2" data-index="${sub.index}" data-timecode="${sub.timecode}" oninput="updateMetrics(this)">${sub.text}</textarea>
                     <div class="metrics-row">
