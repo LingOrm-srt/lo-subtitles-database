@@ -1,45 +1,65 @@
 import os
 import re
 import json
-import time
-from flask import Flask, render_template_string, request, jsonify
+from datetime import datetime
+from flask import Flask, render_template_string, request, jsonify, make_response
 
 app = Flask(__name__)
 
-METADATA_FILE = "subtitle_metadata.json"
+# Helper to look up or initialize individual tracking layers automatically
+def get_meta_filepath(srt_path):
+    return srt_path.replace(".srt", ".meta.json")
 
-def load_metadata():
-    if os.path.exists(METADATA_FILE):
+def load_or_create_metadata(srt_path, subtitles):
+    meta_path = get_meta_filepath(srt_path)
+    if os.path.exists(meta_path):
         try:
-            with open(METADATA_FILE, "r", encoding="utf-8") as f:
+            with open(meta_path, "r", encoding="utf-8") as f:
                 return json.load(f)
-        except:
-            return {}
-    return {}
+        except Exception:
+            pass
+            
+    # Auto-generate default state dictionary if companion doesn't exist yet
+    metadata = {}
+    for sub in subtitles:
+        metadata[sub['index']] = {
+            "status": "unassigned",
+            "lastUpdatedBy": "System",
+            "lastUpdatedAt": datetime.now().isoformat(),
+            "lockedBy": None
+        }
+    
+    with open(meta_path, "w", encoding="utf-8") as f:
+        json.dump(metadata, f, indent=2)
+    return metadata
 
-def save_metadata(data):
-    with open(METADATA_FILE, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
-
-def get_srt_tree():
-    """Builds a structured dictionary hierarchy grouped by directory folders"""
-    tree = {}
+def get_grouped_srt_files():
+    # Automatically scan repository layers and organize by Series groupings
+    series_groups = {
+        "The Secret of Us": [],
+        "Only You": [],
+        "In Love Forever": [],
+        "Uncategorized Tracks": []
+    }
+    
     for root, dirs, files in os.walk("."):
         if any(h in root for h in [".git", ".devcontainer", "__pycache__"]):
             continue
-        srt_files = [f for f in files if f.endswith(".srt")]
-        if srt_files:
-            folder_name = os.path.relpath(root, ".")
-            if folder_name == ".":
-                folder_name = "Root Directory"
-            tree[folder_name] = []
-            for file in srt_files:
+        for file in files:
+            if file.endswith(".srt") and not file.endswith(".meta.json"):
                 relative_path = os.path.relpath(os.path.join(root, file), ".")
-                tree[folder_name].append({
-                    "name": file,
-                    "path": relative_path
-                })
-    return tree
+                
+                # Sort into clean categories based on string patterns
+                matched = False
+                for series_name in series_groups.keys():
+                    if series_name.lower() in file.lower() or series_name.lower() in root.lower():
+                        series_groups[series_name].append({"name": file, "path": relative_path})
+                        matched = True
+                        break
+                if not matched:
+                    series_groups["Uncategorized Tracks"].append({"name": file, "path": relative_path})
+                    
+    return {k: v for k, v in series_groups.items() if v}
 
 def parse_srt(file_path):
     if not os.path.exists(file_path):
@@ -50,65 +70,23 @@ def parse_srt(file_path):
     blocks = re.split(r'\n\s*\n', content.strip())
     subtitles = []
     
-    metadata = load_metadata().get(file_path, {})
-    
     for block in blocks:
         lines = block.split('\n')
         if len(lines) >= 3:
             line_idx = lines[0].strip()
             timecode = lines[1].strip()
             text = " ".join(lines[2:]).strip()
-            
-            block_meta = metadata.get(line_idx, {
-                "status": "Needs Revision",
-                "updated_at": 0,
-                "author": "System"
-            })
-            
             subtitles.append({
                 "index": line_idx,
                 "timecode": timecode,
-                "text": text,
-                "status": block_meta.get("status", "Needs Revision"),
-                "updated_at": block_meta.get("updated_at", 0),
-                "author": block_meta.get("author", "System")
+                "text": text
             })
     return subtitles
 
-def save_single_block_to_file(file_path, index, new_text, author, status):
-    if not os.path.exists(file_path):
-        return False
-        
-    with open(file_path, "r", encoding="utf-8") as f:
-        content = f.read()
-        
-    blocks = re.split(r'\n\s*\n', content.strip())
-    updated_blocks = []
-    
-    for block in blocks:
-        lines = block.split('\n')
-        if len(lines) >= 3 and lines[0].strip() == str(index):
-            lines[2] = new_text
-            # Remove any trailing extra lines if present
-            updated_blocks.append("\n".join(lines[:3]))
-        else:
-            updated_blocks.append(block)
-            
+def save_srt_clean(file_path, subtitles_list):
     with open(file_path, "w", encoding="utf-8") as f:
-        f.write("\n\n".join(updated_blocks) + "\n\n")
-        
-    # Update global JSON metadata state pipeline
-    all_meta = load_metadata()
-    if file_path not in all_meta:
-        all_meta[file_path] = {}
-        
-    all_meta[file_path][str(index)] = {
-        "status": status,
-        "updated_at": int(time.time()),
-        "author": author
-    }
-    save_metadata(all_meta)
-    return True
+        for sub in subtitles_list:
+            f.write(f"{sub['index']}\n{sub['timecode']}\n{sub['text']}\n\n")
 
 HTML_TEMPLATE = r"""
 <!DOCTYPE html>
@@ -134,70 +112,97 @@ HTML_TEMPLATE = r"""
         .brand-badge { background: linear-gradient(135deg, #FF77ED, #71EDFF); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .workspace { display: flex; flex: 1; overflow: hidden; }
         
-        /* Left Column Pane */
+        /* Studio Playback Module Area */
         .video-pane {
-            width: 40%; background: #07050d;
+            width: 45%; background: #07050d;
             display: flex; flex-direction: column; padding: 24px;
             border-right: 1px solid rgba(255, 255, 255, 0.06);
-            box-sizing: border-box; gap: 16px; overflow-y: auto;
+            box-sizing: border-box; gap: 16px;
         }
+        
+        /* Floating Interface Container */
         .media-container {
             width: 100%; aspect-ratio: 16/9; background: #000000;
-            border-radius: 12px; border: 2px dashed rgba(113, 237, 255, 0.3);
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5); position: relative; box-sizing: border-box;
+            border-radius: 12px; border: 2px dashed rgba(113, 237, 255, 0.25);
+            overflow: hidden; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); position: relative;
         }
         
-        /* Structural Script Manager Asset Tree */
-        .tree-container {
-            background: #110e21; border: 1px solid #221c38; border-radius: 8px; padding: 16px;
+        /* FIXED: Forced absolute z-index layout floating over everything */
+        .subtitle-overlay-layer {
+            position: absolute; bottom: 0; left: 0; right: 0; top: 0;
+            background: rgba(0, 0, 0, 0.4);
+            display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
+            padding: 24px; pointer-events: none; display: none;
+            text-align: center; z-index: 999;
         }
-        .tree-title { font-size: 12px; font-weight: 700; color: #615c7a; text-transform: uppercase; margin-bottom: 12px; }
-        .folder-group { margin-bottom: 10px; }
-        .folder-header {
-            background: #18142c; padding: 8px 12px; border-radius: 6px; font-size: 13px; 
-            font-weight: 600; color: #71EDFF; cursor: pointer; display: flex; justify-content: space-between;
+        .subtitle-overlay-layer.active-view { display: flex; }
+        .overlay-text-render {
+            color: #ffffff; background: rgba(11, 9, 20, 0.95);
+            padding: 12px 24px; border-radius: 8px; font-size: 20px;
+            font-weight: 600; border: 2px solid #FF77ED;
+            max-width: 85%; line-height: 1.4; box-shadow: 0 8px 24px rgba(0,0,0,0.8);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8); font-family: sans-serif;
         }
-        .folder-content { padding-left: 12px; margin-top: 6px; display: flex; flex-direction: column; gap: 4px; }
-        .file-item {
-            padding: 8px 12px; font-size: 12px; color: #b4b0cb; border-radius: 4px; cursor: pointer;
-            transition: all 0.2s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        
+        .instruction-box {
+            background: #110e21; border: 1px solid #2d254b; padding: 20px; border-radius: 8px;
+            display: flex; flex-direction: column; gap: 12px; height: 100%; justify-content: center;
+            box-sizing: border-box; width: 100%; text-align: center; z-index: 1;
         }
-        .file-item:hover { background: rgba(255, 119, 237, 0.1); color: #FF77ED; }
-        .file-item.active-file { background: #FF77ED; color: #0b0914; font-weight: 600; }
+        .instruction-title { color: #FF77ED; font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+        .step-list { margin: 0; padding-left: 20px; font-size: 13px; color: #b4b0cb; line-height: 1.8; text-align: left; }
+        .step-list strong { color: #71EDFF; }
 
-        /* Subtitle Spreadsheet Layout Pane */
-        .subtitle-pane { width: 60%; display: flex; flex-direction: column; padding: 24px; box-sizing: border-box; }
-        
-        /* Dedicated Subtitle Text Overlay Monitor Ribbon */
-        .monitor-ribbon {
-            background: #000000; border: 1px solid rgba(113, 237, 255, 0.2);
-            border-radius: 8px; padding: 16px; margin-bottom: 16px; min-height: 50px;
-            display: flex; justify-content: center; align-items: center; text-align: center;
-            box-shadow: inset 0 0 15px rgba(113, 237, 255, 0.05);
+        .url-input-container {
+            background: #110e21; border: 1px solid #221c38; padding: 12px; border-radius: 8px;
+            display: flex; flex-direction: column; gap: 8px;
         }
-        .monitor-text { color: #ffffff; font-size: 18px; font-weight: 500; font-family: sans-serif; }
-
-        /* Jump Utility Search Bar Wrapper */
-        .search-wrapper { display: flex; gap: 10px; margin-bottom: 16px; }
+        .url-input-row { display: flex; gap: 10px; }
+        input[type="text"] {
+            flex: 1; padding: 12px 16px; background: #07050d;
+            border: 1px solid #2d254b; border-radius: 6px;
+            color: #ffffff; font-family: inherit; font-size: 13px;
+        }
+        input[type="text"]:focus { outline: none; border-color: #71EDFF; }
         
+        .btn {
+            padding: 12px 20px; border: none; border-radius: 6px;
+            font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s ease;
+        }
+        .btn-primary { background: #FF77ED; color: #0b0914; text-decoration: none; text-align: center; display: inline-block; }
+        .btn-primary:hover { background: #ff99f0; transform: translateY(-1px); }
+        .btn-success { background: #71EDFF; color: #0b0914; box-shadow: 0 0 15px rgba(113,237,255,0.2); }
+        .btn-success:hover { background: #96f2ff; box-shadow: 0 0 25px rgba(113,237,255,0.4); }
+        
+        /* Subtitle Editing Pane Grid Layout */
+        .subtitle-pane { width: 55%; display: flex; flex-direction: column; padding: 24px; box-sizing: border-box; }
+        
+        /* OPTIMIZED: Structured Category Selector Layout Dropdown */
+        .file-selector {
+            margin-bottom: 20px; width: 100%; padding: 14px;
+            background: #110e21; border: 1px solid #221c38;
+            color: #71EDFF; font-weight: 600; font-size: 14px; border-radius: 8px; cursor: pointer;
+        }
+        .file-selector optgroup { background: #0b0914; color: #615c7a; font-style: normal; font-weight: 700; }
+        .file-selector option { background: #110e21; color: #f3f4f6; padding: 6px; }
+
         .subtitle-list { flex: 1; overflow-y: auto; padding-right: 8px; }
         
-        /* Multi-User Collaboration Subtitle Cards */
+        /* Collaborative Timed Text Row Cards */
         .subtitle-card {
             background: #110e21; border: 1px solid #1d1833;
-            border-left: 6px solid #2d254b; padding: 16px; margin-bottom: 12px;
-            border-radius: 8px; display: flex; flex-direction: column; gap: 10px; position: relative;
+            border-left: 4px solid #2d254b; padding: 16px; margin-bottom: 12px;
+            border-radius: 8px; display: flex; flex-direction: column; gap: 10px;
+            transition: all 0.2s ease; cursor: pointer; position: relative;
         }
-        .subtitle-card.active-track { box-shadow: 0 0 15px rgba(255,119,237,0.1); border-color: #2d254b; }
+        .subtitle-card:hover { border-color: #2d254b; background: #151129; }
+        .subtitle-card.active-track { border-left-color: #FF77ED; background: #181430; }
+        .subtitle-card.locked-card { opacity: 0.6; pointer-events: none; border-left-color: #ff5555; }
         
-        /* Professional Color Code Tags */
-        .card-tag-Done { border-left-color: #00ffcc !important; }
-        .card-tag-InProgress { border-left-color: #ffcc00 !important; }
-        .card-tag-NeedsRevision { border-left-color: #ff4466 !important; }
-
         .card-meta { display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: 600; color: #615c7a; }
-        .timestamp-badge { color: #71EDFF; background: rgba(113,237,255,0.07); padding: 4px 10px; border-radius: 4px; font-family: monospace; }
+        .timestamp-badge { color: #71EDFF; background: rgba(113,237,255,0.07); padding: 4px 10px; border-radius: 4px; font-family: monospace; transition: all 0.2s; }
+        .timestamp-badge:hover { background: rgba(113,237,255,0.2); color: #ffffff; }
         
         .card-textarea {
             width: 100%; background: #07050d; border: 1px solid #221c38;
@@ -206,238 +211,270 @@ HTML_TEMPLATE = r"""
         }
         .card-textarea:focus { outline: none; border-color: #FF77ED; }
         
-        .collab-row { display: flex; justify-content: space-between; align-items: center; margin-top: 4px; }
-        .author-input { background: transparent; border: none; border-bottom: 1px dashed #2d254b; color: #b4b0cb; font-size: 11px; width: 80px; padding: 2px; }
-        .author-input:focus { outline: none; border-color: #FF77ED; }
-        
-        .status-select { background: #07050d; border: 1px solid #2d254b; color: #f3f4f6; font-size: 11px; padding: 4px 8px; border-radius: 4px; font-weight: 600; }
-        
-        .time-counter { font-size: 11px; color: #615c7a; font-weight: 500; }
-        .collision-alert { color: #ff4466; font-weight: 700; font-size: 11px; display: none; }
-        
-        .instruction-box { background: #110e21; border: 1px solid #2d254b; padding: 16px; border-radius: 8px; box-sizing: border-box; width: 100%; text-align: left; }
-        .instruction-title { color: #FF77ED; font-weight: 700; font-size: 14px; margin-bottom: 6px; }
-        .step-list { margin: 0; padding-left: 16px; font-size: 12px; color: #b4b0cb; line-height: 1.6; }
-        .step-list strong { color: #71EDFF; }
+        /* Collaborative Metadata Badges & Controls */
+        .meta-status-row { display: flex; justify-content: space-between; align-items: center; font-size: 11px; margin-top: 2px; }
+        .audit-trail { color: #534f6b; font-weight: 500; }
+        .tag-selector {
+            background: #07050d; border: 1px solid #221c38; color: #b4b0cb;
+            font-size: 11px; padding: 4px 8px; border-radius: 4px; font-weight: 600; cursor: pointer;
+        }
+        .tag-selector.status-unassigned { color: #b4b0cb; }
+        .tag-selector.status-progress { color: #FF77ED; border-color: rgba(255,119,237,0.4); }
+        .tag-selector.status-revision { color: #ffcc66; border-color: rgba(255,204,102,0.4); }
+        .tag-selector.status-done { color: #71EDFF; border-color: rgba(113,237,255,0.4); }
 
-        .btn { padding: 12px 20px; border: none; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s ease; }
-        .btn-primary { background: #FF77ED; color: #0b0914; text-decoration: none; text-align: center; }
-        .btn-primary:hover { background: #ff99f0; }
-        .btn-success { background: #71EDFF; color: #0b0914; }
+        .metrics-row { display: flex; justify-content: flex-end; font-size: 11px; color: #615c7a; font-weight: 500; }
+        .warning-limit { color: #ff7777; font-weight: 700; }
         
-        input[type="text"].search-box { background: #110e21; border: 1px solid #221c38; padding: 12px 16px; border-radius: 6px; color: #ffffff; font-size: 13px; flex: 1; }
-        input[type="text"].search-box:focus { outline: none; border-color: #71EDFF; }
+        iframe { width: 100%; height: 100%; border: none; border-radius: 12px; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0b0914; }
+        ::-webkit-scrollbar-thumb { background: #1d1833; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #2d254b; }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>🎬 <span class="brand-badge">LingOrm Fan Subtitles</span> // Global Verification Center</h1>
-        <div>
-            <span style="font-size: 12px; color: #615c7a; margin-right: 10px;">Your Workspace Initials:</span>
-            <input type="text" id="globalAuthor" class="author-input" style="width: 50px; font-size: 13px; color:#71EDFF; text-align:center;" value="QC" placeholder="Initials">
+        <h1>🎬 <span class="brand-badge">LingOrm Fan Subtitles</span> // Studio Engine</h1>
+        <div style="display: flex; gap: 12px; align-items: center;">
+            <input type="text" id="usernameInput" placeholder="Enter Translator Name..." value="Translator" style="padding: 8px 12px; background: #07050d; border: 1px solid #2d254b; border-radius: 6px; color:#fff; font-size:12px; width: 140px;">
+            <button class="btn btn-success" onclick="saveActiveFile()">💾 Save Changes to Repo</button>
         </div>
     </header>
 
     <div class="workspace">
         <div class="video-pane">
-            <div class="media-container">
-                <div class="instruction-box">
-                    <div class="instruction-title">CH3Plus PiP Alignment Target</div>
+            <div class="media-container" id="mediaContainer">
+                
+                <div class="subtitle-overlay-layer" id="subtitleOverlay">
+                    <div class="overlay-text-render" id="overlayText">Text Display Buffer</div>
+                </div>
+
+                <div class="instruction-box" id="instructionBox">
+                    <div class="instruction-title">CH3Plus Layout Alignment Studio</div>
                     <ol class="step-list">
-                        <li>Open your CH3Plus episode tab, log in, and click <strong>Picture-in-Picture</strong>.</li>
-                        <li>Drag and align your floating video over this dashed box.</li>
+                        <li>Click the action row link down below to pull the secure browser window tab.</li>
+                        <li>Log into your account, launch the stream, and toggle <strong>Picture-in-Picture</strong>.</li>
+                        <li>Drag that independent pop-out right onto this grid layer.</li>
+                        <li><strong>Live Timed Overlay:</strong> Selection cards on the right will sync text right across this viewport wrapper.</li>
+                        <li><strong>Timestamp Verification:</strong> Click any badge on the right to simulate a timeline change event tracking reference.</li>
                     </ol>
-                    <a href="https://ch3plus.com" target="_blank" class="btn btn-primary" style="margin-top: 10px; display:block; font-size:12px; padding:8px;">🌐 Open CH3Plus Portal</a>
+                    <a href="https://ch3plus.com" target="_blank" class="btn btn-primary" style="margin-top: 8px;">🌐 Open CH3Plus Website</a>
                 </div>
             </div>
             
-            <div class="tree-container">
-                <div class="tree-title">📁 Repository Structure Asset Tree</div>
-                <div id="repoTree">
-                    <!-- Dynamic Folder Groups Inject Here -->
-                    {% for folder, files in tree.items() %}
-                    <div class="folder-group">
-                        <div class="folder-header" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'flex' : 'none'">
-                            <span>📂 {{ folder }}</span>
-                            <span>▼</span>
-                        </div>
-                        <div class="folder-content">
-                            {% for file in files %}
-                            <div class="file-item" onclick="selectFile('{{ file.path }}', this)">📄 {{ file.name }}</div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                    {% endfor %}
+            <div class="url-input-container">
+                <div style="font-size: 11px; font-weight:700; color:#615c7a; text-transform:uppercase; margin-bottom:2px;">YouTube Streaming Link Override</div>
+                <div class="url-input-row">
+                    <input type="text" id="videoUrl" placeholder="Paste alternative YouTube episode link tracks here...">
+                    <button class="btn btn-primary" onclick="loadMediaStream()">Load Overrides</button>
                 </div>
             </div>
         </div>
         
         <div class="subtitle-pane">
-            <!-- Continuous Text Layer Monitor Overlay View -->
-            <div class="monitor-ribbon">
-                <div class="monitor-text" id="monitorText">Select a script file card to review layout layers.</div>
-            </div>
-
-            <!-- Manual Search Jump Tool UI -->
-            <div class="search-wrapper">
-                <input type="text" id="searchJumpInput" class="search-box" placeholder="Type block ID or paste timestamp (e.g., 00:02:15) to jump instantly...">
-                <button class="btn btn-success" onclick="executeSearchJump()">Jump to Line</button>
-            </div>
+            <select class="file-selector" id="fileSelector" onchange="loadSrtFile(this.value)">
+                <option value="">-- Choose Series Script Path Target --</option>
+                {% for series, tracks in grouped_files.items() %}
+                <optgroup label="📂 {{ series }}">
+                    {% for track in tracks %}
+                    <option value="{{ track.path }}">{{ track.name }}</option>
+                    {% endfor %}
+                </optgroup>
+                {% endfor %}
+            </select>
             
             <div class="subtitle-list" id="subtitleList">
-                <div style="color: #615c7a; text-align: center; margin-top: 120px; font-size: 14px;">Please open a folder group and select an SRT target asset to begin.</div>
+                <div style="color: #615c7a; text-align: center; margin-top: 120px; font-size: 14px;">Select an optimized series asset line script track up above to launch processing workflows.</div>
             </div>
         </div>
     </div>
 
     <script>
         let activeFilePath = "";
-        let timeUpdateIntervals = [];
+        let globalMetadata = {};
+        let ytPlayerElement = null;
+        const savedInstructionsHtml = document.getElementById('mediaContainer').innerHTML;
 
-        function formatTimeAgo(timestamp) {
-            if (!timestamp || timestamp === 0) return "Never updated";
-            const diff = Math.floor(Date.now() / 1000) - timestamp;
-            if (diff < 5) return "Just now";
-            if (diff < 60) return `${diff}s ago`;
-            const mins = Math.floor(diff / 60);
-            if (mins < 60) return `${mins}m ago`;
-            return "Hours ago";
-        }
+        function loadMediaStream() {
+            const rawUrl = document.getElementById('videoUrl').value.trim();
+            const container = document.getElementById('mediaContainer');
+            if (!rawUrl) { container.innerHTML = savedInstructionsHtml; return; }
 
-        function executeSearchJump() {
-            const query = document.getElementById('searchJumpInput').value.trim();
-            if (!query) return;
-
-            const cards = document.querySelectorAll('.subtitle-card');
-            let targetCard = null;
-
-            cards.forEach(card => {
-                const blockIdx = card.getAttribute('data-index');
-                const timecode = card.getAttribute('data-timecode');
-                
-                if (blockIdx === query || timecode.includes(query)) {
-                    targetCard = card;
-                }
-            });
-
-            if (targetCard) {
-                targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                targetCard.click(); // Triggers the highlight active state loop automatically
-                document.getElementById('searchJumpInput').value = "";
+            container.innerHTML = "";
+            if (rawUrl.includes('youtube.com') || rawUrl.includes('youtu.be')) {
+                let videoId = "";
+                if (rawUrl.includes('v=')) { videoId = rawUrl.split('v=')[1].split('&')[0]; } 
+                else { videoId = rawUrl.split('/').pop().split('?')[0]; }
+                container.innerHTML = `<iframe id="ytEmbeddedPlayer" src="https://www.youtube-nocookie.com/embed/${videoId}?enablejsapi=1&rel=0" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>`;
+                ytPlayerElement = document.getElementById('ytEmbeddedPlayer');
             } else {
-                alert("No matching Block ID or Timestamp position coordinates found inside this file.");
+                alert("Please drop a supported YouTube video reference trace link profile.");
+                container.innerHTML = savedInstructionsHtml;
             }
         }
 
-        async function selectFile(filePath, element) {
-            document.querySelectorAll('.file-item').forEach(item => item.classList.remove('active-file'));
-            element.classList.add('active-file');
-            activeFilePath = filePath;
-            
-            // Clear prior timing loop allocations
-            timeUpdateIntervals.forEach(clearInterval);
-            timeUpdateIntervals = [];
+        function convertTimestampToSeconds(ts) {
+            const parts = ts.split('-->')[0].trim().split(':');
+            if (parts.length < 3) return 0;
+            const hrs = parseFloat(parts[0]);
+            const mins = parseFloat(parts[1]);
+            const secs = parseFloat(parts[2].replace(',', '.'));
+            return (hrs * 3600) + (mins * 60) + secs;
+        }
 
+        // ACTIVE TIMELINE INTERACTION TRIGGER SEEK
+        function runTimelineSeek(timecodeStr) {
+            const targetSeconds = convertTimestampToSeconds(timecodeStr);
+            if (ytPlayerElement && ytPlayerElement.contentWindow) {
+                ytPlayerElement.contentWindow.postMessage(JSON.stringify({
+                    event: 'command', func: 'seekTo', args: [targetSeconds, true]
+                }), '*');
+                ytPlayerElement.contentWindow.postMessage(JSON.stringify({
+                    event: 'command', func: 'playVideo'
+                }), '*');
+            } else {
+                console.log(`Simulating internal workspace timeline sync execution pointer jump to: ${targetSeconds} seconds.`);
+            }
+        }
+
+        function calculateTimeAgo(isoString) {
+            if (!isoString) return "Never";
+            const date = new Date(isoString);
+            const now = new Date();
+            const seconds = Math.floor((now - date) / 1000);
+            if (seconds < 5) return "Just now";
+            if (seconds < 60) return `${seconds}s ago`;
+            const minutes = Math.floor(seconds / 60);
+            if (minutes < 60) return `${minutes}m ago`;
+            const hours = Math.floor(minutes / 60);
+            return `${hours}h ago`;
+        }
+
+        function displayActiveSubtitle(text) {
+            const overlay = document.getElementById('subtitleOverlay');
+            const overlayText = document.getElementById('overlayText');
+            if (!overlay || !overlayText) return;
+            if (!text.trim()) { overlay.classList.remove('active-view'); } 
+            else { overlayText.innerText = text; overlay.classList.add('active-view'); }
+        }
+
+        function updateCardStatusColor(selectEl, blockId) {
+            selectEl.className = "tag-selector " + "status-" + selectEl.value;
+            if (globalMetadata[blockId]) {
+                globalMetadata[blockId].status = selectEl.value;
+                globalMetadata[blockId].lastUpdatedBy = document.getElementById('usernameInput').value || "User";
+                globalMetadata[blockId].lastUpdatedAt = new Date().toISOString();
+                
+                // Update text label immediately
+                const card = selectEl.closest('.subtitle-card');
+                card.querySelector('.audit-trail').innerText = `Modificado: justo ahora por ${globalMetadata[blockId].lastUpdatedBy}`;
+            }
+        }
+
+        function updateMetrics(textareaElement, blockId) {
+            const currentLen = textareaElement.value.length;
+            const meter = textareaElement.nextElementSibling.querySelector('.char-count');
+            meter.innerText = currentLen;
+            
+            if (textareaElement.closest('.subtitle-card').classList.contains('active-track')) {
+                displayActiveSubtitle(textareaElement.value);
+            }
+            meter.className = currentLen > 40 ? "char-count warning-limit" : "char-count";
+
+            // Mark metadata cache as active modifications trace
+            if (globalMetadata[blockId]) {
+                globalMetadata[blockId].lastUpdatedBy = document.getElementById('usernameInput').value || "User";
+                globalMetadata[blockId].lastUpdatedAt = new Date().toISOString();
+                const audit = textareaElement.closest('.subtitle-card').querySelector('.audit-trail');
+                audit.innerText = `Modified: Just now by ${globalMetadata[blockId].lastUpdatedBy}`;
+            }
+        }
+
+        async function loadSrtFile(filePath) {
+            if (!filePath) return;
+            activeFilePath = filePath;
             const response = await fetch(`/load?file=${encodeURIComponent(filePath)}`);
-            const subs = await response.json();
+            const data = await response.json();
+            
+            const subs = data.subtitles;
+            globalMetadata = data.metadata;
             
             const listContainer = document.getElementById('subtitleList');
             listContainer.innerHTML = "";
             
             subs.forEach(sub => {
-                const cleanedStatus = sub.status.replace(/\s+/g, '');
+                const meta = globalMetadata[sub.index] || { status: "unassigned", lastUpdatedBy: "System", lastUpdatedAt: null };
                 const card = document.createElement('div');
-                card.className = `subtitle-card card-tag-${cleanedStatus}`;
-                card.setAttribute('data-index', sub.index);
-                card.setAttribute('data-timecode', sub.timecode);
-                card.id = `sub-card-${sub.index}`;
+                card.className = "subtitle-card";
                 
-                card.onclick = () => {
-                    document.querySelectorAll('.subtitle-card').forEach(c => c.classList.remove('active-track'));
-                    card.classList.add('active-track');
-                    document.getElementById('monitorText').innerText = card.querySelector('.card-textarea').value;
+                card.onclick = (e) => {
+                    if (e.target.tagName !== 'TEXTAREA' && e.target.tagName !== 'SELECT' && !e.target.classList.contains('timestamp-badge')) {
+                        document.querySelectorAll('.subtitle-card').forEach(c => c.classList.remove('active-track'));
+                        card.classList.add('active-track');
+                        displayActiveSubtitle(card.querySelector('.card-textarea').value);
+                    }
                 };
+                
+                const timeAgo = calculateTimeAgo(meta.lastUpdatedAt);
                 
                 card.innerHTML = `
                     <div class="card-meta">
-                        <span>BLOCK ID #<strong style="color:#ffffff;">${sub.index}</strong></span>
-                        <div class="collision-alert" id="alert-${sub.index}">⚠️ Colliding Editor Active!</div>
-                        <span class="timestamp-badge">${sub.timecode}</span>
+                        <span>BLOCK ID // ${sub.index}</span>
+                        <span class="timestamp-badge" onclick="runTimelineSeek('${sub.timecode}')">${sub.timecode}</span>
                     </div>
-                    <textarea class="card-textarea" rows="2" oninput="handleCardTyping(${sub.index}, this)">${sub.text}</textarea>
-                    <div class="collab-row">
-                        <div>
-                            <span class="time-counter" id="timecounter-${sub.index}" data-time="${sub.updated_at}">
-                                ${formatTimeAgo(sub.updated_at)}
-                            </span>
-                            <span style="font-size:11px; color:#4e4966; margin-left:6px;">by ${sub.author}</span>
-                        </div>
-                        <select class="status-select" onchange="updateBlockStatus(${sub.index}, this.value)">
-                            <option value="Needs Revision" ${sub.status === 'Needs Revision' ? 'selected' : ''}>❌ Needs Revision</option>
-                            <option value="In Progress" ${sub.status === 'In Progress' ? 'selected' : ''}>⏳ In Progress</option>
-                            <option value="Done" ${sub.status === 'Done' ? 'selected' : ''}>✅ Done</option>
+                    <textarea class="card-textarea" rows="2" data-index="${sub.index}" data-timecode="${sub.timecode}" oninput="updateMetrics(this, '${sub.index}')">${sub.text}</textarea>
+                    <div class="metrics-row">
+                        <span>Characters: <span class="char-count">${sub.text.length}</span> / 40 line limit</span>
+                    </div>
+                    <div class="meta-status-row">
+                        <span class="audit-trail">Updated: ${timeAgo} by ${meta.lastUpdatedBy}</span>
+                        <select class="tag-selector status-${meta.status}" onchange="updateCardStatusColor(this, '${sub.index}')">
+                            <option value="unassigned" ${meta.status === 'unassigned' ? 'selected' : ''}>⚪ Unassigned</option>
+                            <option value="progress" ${meta.status === 'progress' ? 'selected' : ''}>🟡 In Progress</option>
+                            <option value="revision" ${meta.status === 'revision' ? 'selected' : ''}>🔵 Revision Needed</option>
+                            <option value="done" ${meta.status === 'done' ? 'selected' : ''}>🟢 Done / Locked</option>
                         </select>
                     </div>
                 `;
                 listContainer.appendChild(card);
-                
-                // Keep the "time ago" counters updated live without reloading the app
-                const interval = setInterval(() => {
-                    const counter = document.getElementById(`timecounter-${sub.index}`);
-                    if (counter) {
-                        const originalTime = parseInt(counter.getAttribute('data-time'));
-                        counter.innerText = formatTimeAgo(originalTime);
-                    }
-                }, 5000);
-                timeUpdateIntervals.push(interval);
             });
         }
 
-        async function handleCardTyping(index, textareaElement) {
-            document.getElementById('monitorText').innerText = textareaElement.value;
-            const author = document.getElementById('globalAuthor').value.trim() || "QC";
-            const card = document.getElementById(`sub-card-${index}`);
-            const selectElement = card.querySelector('.status-select');
+        async function saveActiveFile() {
+            if (!activeFilePath) { alert("Please open an explicit target series workspace file list profile."); return; }
+            const textareas = document.querySelectorAll('.card-textarea');
+            const subtitles = [];
             
-            const response = await fetch('/save-block', {
+            textareas.forEach(tx => {
+                subtitles.push({
+                    index: tx.getAttribute('data-index'),
+                    timecode: tx.getAttribute('data-timecode'),
+                    text: tx.value.trim()
+                });
+            });
+            
+            const response = await fetch('/save', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    file: activeFilePath,
-                    index: index,
-                    text: textareaElement.value,
-                    author: author,
-                    status: selectElement.value
-                })
+                body: JSON.stringify({ file: activeFilePath, subtitles: subtitles, metadata: globalMetadata })
             });
             
-            const data = await response.json();
-            
-            // Check for collision overlaps from other translation team members
-            const alertBox = document.getElementById(`alert-${index}`);
-            if (data.collision_detected) {
-                alertBox.style.display = "block";
+            const resData = await response.json();
+            if (resData.status === "success") {
+                alert("🎉 Pristine SRT and Companion Metadata file structures successfully split written to disk repo!");
             } else {
-                alertBox.style.display = "none";
+                alert("❌ Critical I/O write synchronization error.");
             }
-            
-            // Update time badge instantly on save
-            const counter = document.getElementById(`timecounter-${index}`);
-            counter.setAttribute('data-time', Math.floor(Date.now() / 1000));
-            counter.innerText = "Just now";
         }
 
-        async function updateBlockStatus(index, newStatus) {
-            const card = document.getElementById(`sub-card-${index}`);
-            const textarea = card.querySelector('.card-textarea');
-            
-            // Strip spaces to match CSS class selectors safely
-            const cleanedClass = newStatus.replace(/\s+/g, '');
-            card.className = `subtitle-card card-tag-${cleanedClass} active-track`;
-            
-            handleCardTyping(index, textarea);
-        }
+        window.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault();
+                saveActiveFile();
+            }
+        });
     </script>
 </body>
 </html>
@@ -445,41 +482,37 @@ HTML_TEMPLATE = r"""
 
 @app.route('/')
 def index():
-    tree = get_srt_tree()
-    return render_template_string(HTML_TEMPLATE, tree=tree)
+    grouped = get_grouped_srt_files()
+    return render_template_string(HTML_TEMPLATE, grouped_files=grouped)
 
 @app.route('/load')
 def load_srt():
     file_path = request.args.get('file')
     subs = parse_srt(file_path)
-    return jsonify(subs)
+    meta = load_or_create_metadata(file_path, subs)
+    return jsonify({"subtitles": subs, "metadata": meta})
 
-@app.route('/save-block', methods=['POST'])
-def save_block_api():
+@app.route('/save', methods=['POST'])
+def save_srt_api():
     data = request.json
     file_path = data.get('file')
-    index = data.get('index')
-    text = data.get('text')
-    author = data.get('author')
-    status = data.get('status')
+    subtitles = data.get('subtitles')
+    metadata = data.get('metadata')
     
-    # Read the current metadata state to check for potential collisions
-    all_meta = load_metadata()
-    existing_block = all_meta.get(file_path, {}).get(str(index), {})
-    last_update_time = existing_block.get("updated_at", 0)
-    last_author = existing_block.get("author", "")
+    # Save the pristine SRT for deployment channels
+    save_srt_clean(file_path, subtitles)
     
-    collision_detected = False
-    # If someone else edited this line within the last 60 seconds, flag a collision warning
-    if (int(time.time()) - last_update_time) < 60 and last_author != author and last_author != "":
-        collision_detected = True
+    # Save the split status data object profile locally as hidden tracker
+    meta_path = get_meta_filepath(file_path)
+    with open(meta_path, "w", encoding="utf-8") as f:
+        json.dump(metadata, f, indent=2)
         
-    save_single_block_to_file(file_path, index, text, author, status)
-    
-    return jsonify({
-        "status": "success", 
-        "collision_detected": collision_detected
-    })
+    return jsonify({"status": "success"})
+
+@app.after_request
+def add_security_headers(response):
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    return response
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080)
