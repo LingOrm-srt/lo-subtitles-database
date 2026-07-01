@@ -82,6 +82,14 @@ HTML_TEMPLATE = r"""
         video { width: 100%; height: 100%; object-fit: contain; }
         iframe { width: 100%; height: 100%; border: none; }
         
+        .instruction-box {
+            background: #110e21; border: 1px solid #2d254b; padding: 20px; border-radius: 8px;
+            display: flex; flex-direction: column; gap: 12px; height: 100%; justify-content: center;
+        }
+        .instruction-title { color: #FF77ED; font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+        .step-list { margin: 0; padding-left: 20px; font-size: 13px; color: #b4b0cb; line-height: 1.8; }
+        .step-list strong { color: #71EDFF; }
+
         .url-input-container {
             background: #110e21; border: 1px solid #221c38; padding: 12px; border-radius: 8px;
             display: flex; flex-direction: column; gap: 8px;
@@ -98,7 +106,7 @@ HTML_TEMPLATE = r"""
             padding: 12px 20px; border: none; border-radius: 6px;
             font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s ease;
         }
-        .btn-primary { background: #FF77ED; color: #0b0914; }
+        .btn-primary { background: #FF77ED; color: #0b0914; text-decoration: none; text-align: center; display: inline-block; }
         .btn-primary:hover { background: #ff99f0; transform: translateY(-1px); }
         .btn-success { background: #71EDFF; color: #0b0914; box-shadow: 0 0 15px rgba(113,237,255,0.2); }
         .btn-success:hover { background: #96f2ff; box-shadow: 0 0 25px rgba(113,237,255,0.4); }
@@ -123,7 +131,8 @@ HTML_TEMPLATE = r"""
         .subtitle-card.active-track { border-left-color: #FF77ED; background: #181430; box-shadow: inset 0 0 10px rgba(255,119,237,0.05); }
         
         .card-meta { display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; color: #615c7a; }
-        .timestamp-badge { color: #71EDFF; background: rgba(113,237,255,0.07); padding: 2px 8px; border-radius: 4px; font-family: monospace; }
+        .timestamp-badge { color: #71EDFF; background: rgba(113,237,255,0.07); padding: 2px 8px; border-radius: 4px; font-family: monospace; cursor: copy; }
+        .timestamp-badge:hover { background: rgba(113,237,255,0.2); }
         
         .card-textarea {
             width: 100%; background: #07050d; border: 1px solid #221c38;
@@ -151,13 +160,23 @@ HTML_TEMPLATE = r"""
     <div class="workspace">
         <div class="video-pane">
             <div class="media-container" id="mediaContainer">
-                <div style="color: #615c7a; text-align: center; font-size: 14px;">No Media Target Pipeline Active</div>
+                <div class="instruction-box" id="instructionBox">
+                    <div class="instruction-title">CH3Plus Secure Playback Mode</div>
+                    <ol class="step-list">
+                        <li>Click the <strong>Open CH3Plus Website</strong> button below.</li>
+                        <li>Log into your personal CH3Plus account in that tab and navigate to your episode.</li>
+                        <li>Right-click the video player and choose <strong>Picture-in-Picture</strong>.</li>
+                        <li>Return to this dashboard. Drag the floating video window directly over this black square!</li>
+                        <li><em>Tip: Click any cyan timestamp badge on the right to copy its layout position time code automatically.</em></li>
+                    </ol>
+                    <a href="https://ch3plus.com" target="_blank" class="btn btn-primary" style="margin-top: 8px;">🌐 Open CH3Plus Website</a>
+                </div>
             </div>
             <div class="url-input-container">
-                <div style="font-size: 11px; font-weight:700; color:#615c7a; text-transform:uppercase; margin-bottom:2px;">Media Multiplexer Route (Only YouTube Supported Online)</div>
+                <div style="font-size: 11px; font-weight:700; color:#615c7a; text-transform:uppercase; margin-bottom:2px;">YouTube Link Overrides</div>
                 <div class="url-input-row">
-                    <input type="text" id="videoUrl" placeholder="Paste YouTube Link OR Type Local Video Filename (e.g. video.mp4)...">
-                    <button class="btn btn-primary" onclick="loadMediaStream()">Link Stream</button>
+                    <input type="text" id="videoUrl" placeholder="Paste a YouTube link if working on an alternative YouTube track...">
+                    <button class="btn btn-primary" onclick="loadMediaStream()">Load YouTube</button>
                 </div>
             </div>
         </div>
@@ -178,27 +197,19 @@ HTML_TEMPLATE = r"""
 
     <script>
         let activeFilePath = "";
-        let nativePlayerElement = null;
-
-        function convertTimestampToSeconds(ts) {
-            const parts = ts.split('-->')[0].trim().split(':');
-            if (parts.length < 3) return 0;
-            const hrs = parseFloat(parts[0]);
-            const mins = parseFloat(parts[1]);
-            const secs = parseFloat(parts[2].replace(',', '.'));
-            return (hrs * 3600) + (mins * 60) + secs;
-        }
+        const savedInstructionsHtml = document.getElementById('mediaContainer').innerHTML;
 
         function loadMediaStream() {
             const rawUrl = document.getElementById('videoUrl').value.trim();
             const container = document.getElementById('mediaContainer');
             
-            if (!rawUrl) return;
+            if (!rawUrl) {
+                container.innerHTML = savedInstructionsHtml;
+                return;
+            }
 
             container.innerHTML = "";
-            nativePlayerElement = null;
 
-            // Route 1: Standard YouTube Stream
             if (rawUrl.includes('youtube.com') || rawUrl.includes('youtu.be')) {
                 let videoId = "";
                 if (rawUrl.includes('v=')) {
@@ -207,45 +218,20 @@ HTML_TEMPLATE = r"""
                     videoId = rawUrl.split('/').pop().split('?')[0];
                 }
                 container.innerHTML = `<iframe id="ytEmbeddedPlayer" src="https://www.youtube-nocookie.com/embed/${videoId}?enablejsapi=1&rel=0" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>`;
-            } 
-            // Route 2: Ch3Plus Security Warning Alert Block
-            else if (rawUrl.includes('ch3plus.com')) {
-                container.innerHTML = `
-                    <div style="padding: 20px; text-align: center; color: #ff7777; font-size: 13px; line-height: 1.6;">
-                        ⚠️ <strong>Ch3Plus Link Blocked:</strong> Channel 3 enforces secure session tokens on their site links.<br><br>
-                        <span style="color:#aaa;">To review this track: Download the video file, drag it into your Codespace sidebar directory, and type its exact filename (e.g., <code>episode1.mp4</code>) into the input box below!</span>
-                    </div>`;
-            }
-            // Route 3: Fallback Player for Local MP4 Video Workspace Files
-            else {
-                container.innerHTML = `<video id="localNativePlayer" controls><source src="${rawUrl}" type="video/mp4"></video>`;
-                nativePlayerElement = document.getElementById('localNativePlayer');
-                
-                nativePlayerElement.onerror = function() {
-                    container.innerHTML = `<div style="color: #ff7777; font-size: 13px; text-align: center; padding: 20px;">❌ Unable to load media stream. Ensure the local filename is spelled exactly right, or paste a valid YouTube link.</div>`;
-                };
+            } else {
+                alert("Please provide a valid YouTube link, or leave it blank to follow the CH3Plus instructions.");
+                container.innerHTML = savedInstructionsHtml;
             }
         }
 
-        function seekToTimestamp(timecodeStr) {
-            const targetSeconds = convertTimestampToSeconds(timecodeStr);
-            
-            if (nativePlayerElement) {
-                nativePlayerElement.currentTime = targetSeconds;
-                nativePlayerElement.play();
-            } 
-            else {
-                const ytFrame = document.getElementById('ytEmbeddedPlayer');
-                if (ytFrame && ytFrame.contentWindow) {
-                    const payload = JSON.stringify({
-                        event: 'command',
-                        func: 'seekTo',
-                        args: [targetSeconds, true]
-                    });
-                    ytFrame.contentWindow.postMessage(payload, '*');
-                    ytFrame.contentWindow.postMessage(JSON.stringify({event: 'command', func: 'playVideo'}), '*');
-                }
-            }
+        function copyTimestampToClipboard(text, element) {
+            navigator.clipboard.writeText(text).then(() => {
+                const originalText = element.innerText;
+                element.innerText = "COPIED!";
+                setTimeout(() => {
+                    element.innerText = originalText;
+                }, 1000);
+            });
         }
 
         function updateMetrics(textareaElement) {
@@ -272,8 +258,7 @@ HTML_TEMPLATE = r"""
                 const card = document.createElement('div');
                 card.className = "subtitle-card";
                 card.onclick = (e) => {
-                    if(e.target.tagName !== 'TEXTAREA') {
-                        seekToTimestamp(sub.timecode);
+                    if(e.target.tagName !== 'TEXTAREA' && !e.target.classList.contains('timestamp-badge')) {
                         document.querySelectorAll('.subtitle-card').forEach(c => c.classList.remove('active-track'));
                         card.classList.add('active-track');
                     }
@@ -282,7 +267,7 @@ HTML_TEMPLATE = r"""
                 card.innerHTML = `
                     <div class="card-meta">
                         <span>BLOCK ID // ${sub.index}</span>
-                        <span class="timestamp-badge">${sub.timecode}</span>
+                        <span class="timestamp-badge" onclick="copyTimestampToClipboard('${sub.timecode.split('-->')[0].trim()}', this)">${sub.timecode}</span>
                     </div>
                     <textarea class="card-textarea" rows="2" data-index="${sub.index}" data-timecode="${sub.timecode}" oninput="updateMetrics(this)">${sub.text}</textarea>
                     <div class="metrics-row">
