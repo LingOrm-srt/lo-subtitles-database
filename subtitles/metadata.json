@@ -6,29 +6,58 @@
   },
 
   "MAPPING": {
+
     
-    "=== THE SECRET OF US (SERIES) ===": "Comment Line for Organization",
+    
+    "=== THE SECRET OF US (SERIES) ===": "FULL EPISODES SECTION (PAID)",
 
-    "ch3_stream_77810": {
+    
+
+    "ch3-video-id": {
       "series": "the-secret-of-us",
-      "episode": "ep-01",
+      "episode": "ep-01/full-episode",
       "offset": 0
     },
-    "yt_watch_dQw4w9W": {
+    "ch3-video-id": {
       "series": "the-secret-of-us",
-      "episode": "ep-01",
-      "offset": -11.5
-    },
-
-    "ch3_stream_77812": {
-      "series": "the-secret-of-us",
-      "episode": "ep-02",
+      "episode": "ep-02/full-episode",
       "offset": 0
     },
-    "yt_watch_kXyZ882": {
+
+    "ch3-video-id": {
       "series": "the-secret-of-us",
-      "episode": "ep-02",
-      "offset": -11.5
+      "episode": "ep-03/full-episode",
+      "offset": 0
+    },
+    "ch3-video-id": {
+      "series": "the-secret-of-us",
+      "episode": "ep-04/full-episode",
+      "offset": 0
+    },
+    "ch3-video-id": {
+      "series": "the-secret-of-us",
+      "episode": "ep-04/full-episode",
+      "offset": 0
+    },
+    "ch3-video-id": {
+      "series": "the-secret-of-us",
+      "episode": "ep-05/full-episode",
+      "offset": 0
+    },
+    "ch3-video-id": {
+      "series": "the-secret-of-us",
+      "episode": "ep-06/full-episode",
+      "offset": 0
+    },
+    "ch3-video-id": {
+      "series": "the-secret-of-us",
+      "episode": "ep-07/full-episode",
+      "offset": 0
+    },
+    "ch3-video-id": {
+      "series": "the-secret-of-us",
+      "episode": "ep-08/full-episode",
+      "offset": 0
     },
 
 
@@ -44,9 +73,71 @@
       "episode": "ep-02/full-episode",
       "offset": 0
     },
+    "ch3-video-id": {
+      "series": "only-you",
+      "episode": "ep-03/full-episode",
+      "offset": 0
+    },
+    "ch3-video-id": {
+      "series": "only-you",
+      "episode": "ep-04/full-episode",
+      "offset": 0
+    },
+    "ch3-video-id": {
+      "series": "only-you",
+      "episode": "ep-05/full-episode",
+      "offset": 0
+    },
+    "ch3-video-id": {
+      "series": "only-you",
+      "episode": "ep-06/full-episode",
+      "offset": 0
+    },
+    "ch3-video-id": {
+      "series": "only-you",
+      "episode": "ep-07/full-episode",
+      "offset": 0
+    },
+    "ch3-video-id": {
+      "series": "only-you",
+      "episode": "ep-08/full-episode",
+      "offset": 0
+    },
+    "ch3-video-id": {
+      "series": "only-you",
+      "episode": "ep-09/full-episode",
+      "offset": 0
+    },
+    "ch3-video-id": {
+      "series": "only-you",
+      "episode": "ep-10/full-episode",
+      "offset": 0
+    },
+    "ch3-video-id": {
+      "series": "only-you",
+      "episode": "ep-11/full-episode",
+      "offset": 0
+    },
+    "ch3-video-id": {
+      "series": "only-you",
+      "episode": "ep-12/full-episode",
+      "offset": 0
+    },
+    "ch3-video-id": {
+      "series": "only-you",
+      "episode": "ep-13/full-episode",
+      "offset": 0
+    },
+    "ch3-video-id": {
+      "series": "only-you",
+      "episode": "ep-14/full-episode",
+      "offset": 0
+    },
     
 
     "=== ONLY YOU (SERIES) ===": "EPISODES IN PARTS SECTION (FREE). VIDEO ID'S FOR CH3PLUS AND YOUTUBE",
+
+    
 
     "251450": {
       "series": "only-you",
@@ -173,6 +264,8 @@
 
     "=== ONLY YOU (SERIES) ===": "EPISODES BEHIND THE SCENES SECTION (PAID)",
 
+    
+
     "ch3-video-id": {
       "series": "only-you",
       "episode": "oy-behind-the-scenes/ep-01",
@@ -183,6 +276,322 @@
       "episode": "oy-behind-the-scenes/ep-02",
       "offset": 0
     },
+    "ch3-video-id": {
+      "series": "only-you",
+      "episode": "oy-behind-the-scenes/ep-03",
+      "offset": 0
+    },
+     "ch3-video-id": {
+      "series": "only-you",
+      "episode": "oy-behind-the-scenes/ep-04",
+      "offset": 0
+    },
+     "ch3-video-id": {
+      "series": "only-you",
+      "episode": "oy-behind-the-scenes/ep-05",
+      "offset": 0
+    },
+     "ch3-video-id": {
+      "series": "only-you",
+      "episode": "oy-behind-the-scenes/ep-06",
+      "offset": 0
+    },
+     "ch3-video-id": {
+      "series": "only-you",
+      "episode": "oy-behind-the-scenes/ep-07",
+      "offset": 0
+    },
+     "ch3-video-id": {
+      "series": "only-you",
+      "episode": "oy-behind-the-scenes/ep-08",
+      "offset": 0
+    },
+     "ch3-video-id": {
+      "series": "only-you",
+      "episode": "oy-behind-the-scenes/ep-09",
+      "offset": 0
+    },
+     "ch3-video-id": {
+      "series": "only-you",
+      "episode": "oy-behind-the-scenes/ep-10",
+      "offset": 0
+    },
+     "ch3-video-id": {
+      "series": "only-you",
+      "episode": "oy-behind-the-scenes/ep-11",
+      "offset": 0
+    },
+     "ch3-video-id": {
+      "series": "only-you",
+      "episode": "oy-behind-the-scenes/ep-12",
+      "offset": 0
+    },
+     "ch3-video-id": {
+      "series": "only-you",
+      "episode": "oy-behind-the-scenes/ep-13",
+      "offset": 0
+    },
+     "ch3-video-id": {
+      "series": "only-you",
+      "episode": "oy-behind-the-scenes/ep-14",
+      "offset": 0
+    },
+
+    
+
+     "=== IN LOVE FOREVER (SERIES) ===": "FULL EPISODES SECTION (PAID)",
+
+    
+
+     },
+    "ch3-video-id": {
+      "series": "in-love-forever",
+      "episode": "ep-01/full-episode",
+      "offset": 0
+    },
+    "ch3-video-id": {
+      "series": "in-love-forever",
+      "episode": "ep-02/full-episode",
+      "offset": 0
+    },
+     "ch3-video-id": {
+      "series": "in-love-forever",
+      "episode": "ep-03/full-episode",
+      "offset": 0
+    },
+     "ch3-video-id": {
+      "series": "in-love-forever",
+      "episode": "ep-04/full-episode",
+      "offset": 0
+    },
+    "ch3-video-id": {
+      "series": "in-love-forever",
+      "episode": "ep-05/full-episode",
+      "offset": 0
+    },
+    "ch3-video-id": {
+      "series": "in-love-forever",
+      "episode": "ep-06/full-episode",
+      "offset": 0
+    },
+    "ch3-video-id": {
+      "series": "in-love-forever",
+      "episode": "ep-07/full-episode",
+      "offset": 0
+    },
+    "ch3-video-id": {
+      "series": "in-love-forever",
+      "episode": "ep-08/full-episode",
+      "offset": 0
+    },
+    "ch3-video-id": {
+      "series": "in-love-forever",
+      "episode": "ep-09/full-episode",
+      "offset": 0
+    },
+    "ch3-video-id": {
+      "series": "in-love-forever",
+      "episode": "ep-10/full-episode",
+      "offset": 0
+    },
+    "ch3-video-id": {
+      "series": "in-love-forever",
+      "episode": "ep-11/full-episode",
+      "offset": 0
+    },
+  "ch3-video-id": {
+      "series": "in-love-forever",
+      "episode": "ep-12/full-episode",
+      "offset": 0
+    },
+
+  
+  "=== IN LOVE FOREVER (SERIES) ===": "EPISODES IN PARTS SECTION (FREE). VIDEO ID'S FOR CH3PLUS AND YOUTUBE",
+  
+
+    "ch3-video-id": {
+      "series": "in-love-forever",
+      "episode": "ep-01/part-1",
+      "offset": 0
+    },
+    "yt-video-id": {
+      "series": "in-love-forever",
+      "episode": "ep-01/part-1",
+      "offset": -5.5
+    },
+    "ch3-video-id": {
+      "series": "in-love-forever",
+      "episode": "ep-01/part-2",
+      "offset": 0
+    },
+    "yt-video-id": {
+      "series": "in-love-forever",
+      "episode": "ep-01/part-2",
+      "offset": -5.5
+    },
+    "ch3-video-id": {
+      "series": "in-love-forever",
+      "episode": "ep-01/part3",
+      "offset": 0
+    },
+    "yt-video-id": {
+      "series": "in-love-forever",
+      "episode": "ep-01/part-3",
+      "offset": -5.5
+    },
+    "ch3-video-id": {
+      "series": "in-love-forever",
+      "episode": "ep-01/part-4",
+      "offset": 0
+    },
+    "yt-video-id": {
+      "series": "in-love-forever",
+      "episode": "ep-01/part-4",
+      "offset": -5.5
+    },
+    "ch3-video-id": {
+      "series": "in-love-forever",
+      "episode": "ep-01/part-5",
+      "offset": 0
+    },
+     "ch3-video-id": {
+      "series": "in-love-forever",
+      "episode": "ep-02/part-1",
+      "offset": 0
+    },
+    "yt-video-id": {
+      "series": "in-love-forever",
+      "episode": "ep-02/part-1",
+      "offset": -5.5
+    },
+    "ch3-video-id": {
+      "series": "in-love-forever",
+      "episode": "ep-02/part-2",
+      "offset": 0
+    },
+    "yt-video-id": {
+      "series": "in-love-forever",
+      "episode": "ep-02/part-2",
+      "offset": -5.5
+    },
+    "ch3-video-id": {
+      "series": "in-love-forever",
+      "episode": "ep-02/part3",
+      "offset": 0
+    },
+    "yt-video-id": {
+      "series": "in-love-forever",
+      "episode": "ep-02/part-3",
+      "offset": -5.5
+    },
+    "ch3-video-id": {
+      "series": "in-love-forever",
+      "episode": "ep-02/part-4",
+      "offset": 0
+    },
+    "yt-video-id": {
+      "series": "in-love-forever",
+      "episode": "ep-02/part-4",
+      "offset": -5.5
+    },
+    "ch3-video-id": {
+      "series": "in-love-forever",
+      "episode": "ep-02/part-5",
+      "offset": 0
+    },
+     "ch3-video-id": {
+      "series": "in-love-forever",
+      "episode": "ep-03/part-1",
+      "offset": 0
+    },
+    "yt-video-id": {
+      "series": "in-love-forever",
+      "episode": "ep-03/part-1",
+      "offset": -5.5
+    },
+    "ch3-video-id": {
+      "series": "in-love-forever",
+      "episode": "ep-03/part-2",
+      "offset": 0
+    },
+    "yt-video-id": {
+      "series": "in-love-forever",
+      "episode": "ep-03/part-2",
+      "offset": -5.5
+    },
+    "ch3-video-id": {
+      "series": "in-love-forever",
+      "episode": "ep-03/part3",
+      "offset": 0
+    },
+    "yt-video-id": {
+      "series": "in-love-forever",
+      "episode": "ep-03/part-3",
+      "offset": -5.5
+    },
+    "ch3-video-id": {
+      "series": "in-love-forever",
+      "episode": "ep-03/part-4",
+      "offset": 0
+    },
+    "yt-video-id": {
+      "series": "in-love-forever",
+      "episode": "ep-03/part-4",
+      "offset": -5.5
+    },
+    "ch3-video-id": {
+      "series": "in-love-forever",
+      "episode": "ep-03/part-5",
+      "offset": 0
+    },
+     "ch3-video-id": {
+      "series": "in-love-forever",
+      "episode": "ep-04/part-1",
+      "offset": 0
+    },
+    "yt-video-id": {
+      "series": "in-love-forever",
+      "episode": "ep-04/part-1",
+      "offset": -5.5
+    },
+    "ch3-video-id": {
+      "series": "in-love-forever",
+      "episode": "ep-04/part-2",
+      "offset": 0
+    },
+    "yt-video-id": {
+      "series": "in-love-forever",
+      "episode": "ep-04/part-2",
+      "offset": -5.5
+    },
+    "ch3-video-id": {
+      "series": "in-love-forever",
+      "episode": "ep-04/part3",
+      "offset": 0
+    },
+    "yt-video-id": {
+      "series": "in-love-forever",
+      "episode": "ep-04/part-3",
+      "offset": -5.5
+    },
+    "ch3-video-id": {
+      "series": "in-love-forever",
+      "episode": "ep-04/part-4",
+      "offset": 0
+    },
+    "yt-video-id": {
+      "series": "in-love-forever",
+      "episode": "ep-04/part-4",
+      "offset": -5.5
+    },
+    "ch3-video-id": {
+      "series": "in-love-forever",
+      "episode": "ep-04/part-5",
+      "offset": 0
+    },
+    
+    
+    
     
 
     "=== INTERVIEWS & BEHIND THE SCENES ===": "Comment Line for Organization",
